@@ -1,0 +1,50 @@
+name: plantly_app
+description: "A new Flutter project."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.3
+dependencies:
+  flutter:
+    sdk: flutter
+  google_fonts: ^8.0.2
+  provider: ^6.1.5
+  equatable: ^2.0.8
+  flutter_bloc: ^8.1.6
+  flutter_secure_storage: ^9.2.2
+  collection: ^1.18.0
+  uuid: ^4.5.3
+  firebase_core: ^4.6.0
+  firebase_auth: ^6.3.0
+  cloud_firestore: ^6.3.0
+  google_sign_in: ^7.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_native_splash: ^2.4.7
+  flutter_launcher_icons: ^0.14.3
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icon/
+
+flutter_native_splash:
+  color: "#0AA84F"
+  image: assets/icon/plantly_logo.png
+  android: true
+  ios: true
+  android_12:
+    color: "#0AA84F"
+    image: assets/icon/plantly_logo.png
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/plantly_logo.png"
+  adaptive_icon_background: "#0AA84F"
+  adaptive_icon_foreground: "assets/icon/plantly_logo.png"

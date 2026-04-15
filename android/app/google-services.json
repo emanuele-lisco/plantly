@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "355749972505",
+    "project_id": "plantly-app",
+    "storage_bucket": "plantly-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:355749972505:android:e6055d1919730288edf888",
+        "android_client_info": {
+          "package_name": "com.plantly"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "355749972505-7gqr53fmhspf5tl6gbnhklimdf4t5b51.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.plantly",
+            "certificate_hash": "a3ecdefb43fdd5f8f58b8e7aff1ca1022cd6ab2e"
+          }
+        },
+        {
+          "client_id": "355749972505-fk2qn48etlcqgr8fib5am6ivln0hvdgm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgUTAdWKRIEXS2L1umrFG31WkU5lzFMVY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "355749972505-4fr4l1jgqbp4k0qqh60ifskk4o5fomdr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "355749972505-i072f6pvqdaa1k3ih2d0gh4b1gf44g8f.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.plantly"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

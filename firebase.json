@@ -1,0 +1,1 @@
+{"flutter":{"platforms":{"android":{"default":{"projectId":"plantly-app","appId":"1:355749972505:android:e6055d1919730288edf888","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"plantly-app","configurations":{"android":"1:355749972505:android:e6055d1919730288edf888","ios":"1:355749972505:ios:6d6e2fecd4b4fa8cedf888"}}}}}}
