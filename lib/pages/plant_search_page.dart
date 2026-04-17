@@ -86,10 +86,10 @@ class PlantSearchPage extends StatelessWidget {
             // Categorie suggerite — UI statica, prefigurano la struttura futura.
             Text('Categorie', style: textTheme.titleLarge),
             const SizedBox(height: 12),
-            Wrap(
+            const Wrap(
               spacing: 10,
               runSpacing: 10,
-              children: const [
+              children: [
                 _CategoryChip(label: 'Piante da interno', icon: Icons.home_outlined),
                 _CategoryChip(label: 'Succulente', icon: Icons.wb_sunny_outlined),
                 _CategoryChip(label: 'Erbe aromatiche', icon: Icons.eco_outlined),
