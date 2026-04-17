@@ -32,6 +32,7 @@ class PlantlyBottomNav extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // 0 — Home
           _NavItem(
             icon: Icons.home_rounded,
             label: 'Home',
@@ -40,6 +41,7 @@ class PlantlyBottomNav extends StatelessWidget {
             idleColor: colorScheme.onSurface.withOpacity(0.55),
             onTap: () => onTap(0),
           ),
+          // 1 — Giardino
           _NavItem(
             icon: Icons.local_florist_rounded,
             label: 'Giardino',
@@ -48,13 +50,23 @@ class PlantlyBottomNav extends StatelessWidget {
             idleColor: colorScheme.onSurface.withOpacity(0.55),
             onTap: () => onTap(1),
           ),
+          // 2 — Cerca
           _NavItem(
-            icon: Icons.person_rounded,
-            label: 'Profilo',
+            icon: Icons.search_rounded,
+            label: 'Cerca',
             selected: currentIndex == 2,
             selectedColor: colorScheme.primary,
             idleColor: colorScheme.onSurface.withOpacity(0.55),
             onTap: () => onTap(2),
+          ),
+          // 3 — Profilo
+          _NavItem(
+            icon: Icons.person_rounded,
+            label: 'Profilo',
+            selected: currentIndex == 3,
+            selectedColor: colorScheme.primary,
+            idleColor: colorScheme.onSurface.withOpacity(0.55),
+            onTap: () => onTap(3),
           ),
         ],
       ),

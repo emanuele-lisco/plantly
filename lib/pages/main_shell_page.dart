@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/pages/garden_page.dart';
+import 'package:plantly_app/pages/plant_search_page.dart';
 import '../widgets/bottom_appbar/plantly_bottom_navigation.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
@@ -14,9 +15,15 @@ class MainShellPage extends StatefulWidget {
 class _MainShellPageState extends State<MainShellPage> {
   int _currentIndex = 0;
 
+  // Indici tab:
+  // 0 — Home
+  // 1 — Giardino
+  // 2 — Cerca (PlantSearchPage — placeholder per futura feature)
+  // 3 — Profilo
   final List<Widget> _pages = const [
     HomePage(),
     GardenPage(),
+    PlantSearchPage(),
     ProfilePage(),
   ];
 
