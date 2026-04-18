@@ -1,238 +1,253 @@
-# Documentazione tecnica ufficiale — Plantly (`lib/`)
-
-## Premessa e perimetro dell’analisi
-
-Questa documentazione è basata **esclusivamente** sui file presenti nella cartella `lib/` fornita.  
-Non sono stati analizzati file esterni a `lib/`, quindi questa documentazione **non copre**:
-
-- `pubspec.yaml`
-- asset reali
-- configurazioni Android/iOS/Web
-- regole Firestore
-- icone/app launcher
-- test automatici
-- CI/CD
-
-Di conseguenza, tutte le osservazioni qui riportate sono riferite al **layer applicativo Flutter** effettivamente presente nel codice.
-
----
+# Documentazione tecnica ufficiale — Plantly
 
 ## 1. 🧠 Overview del progetto
 
 ### Scopo dell’app
-Plantly è un’app mobile Flutter orientata alla gestione semplificata delle piante domestiche. Dal codice attuale emergono tre aree principali:
-
+Plantly è un’app Flutter dedicata alla gestione di piante domestiche tramite un’interfaccia mobile semplice e visivamente curata. Dallo stato attuale del codice emergono quattro aree principali:
 - autenticazione utente
-- visualizzazione di una home informativa
-- visualizzazione di un “giardino virtuale”
-- consultazione del profilo utente
+- profilo utente persistito su Firestore
+- dashboard / home informativa
+- giardino virtuale e ricerca piante ancora in forma placeholder/demo
 
 ### Problema che risolve
-L’app mira a offrire un punto unico per:
-
-- accesso/registrazione utente
-- gestione di un’identità utente persistita
-- consultazione rapida dello stato di piante e attività di cura
+L’app fornisce una base per:
+- registrazione e login utente
+- identificazione persistente dell’utente
+- visualizzazione di informazioni e stato legati al mondo “plant care”
+- futura estensione verso ricerca, gestione piante reali e integrazione con dispositivi smart
 
 ### Stato attuale del progetto
-Lo stato attuale è quello di un **MVP in sviluppo** con una base architetturale già impostata ma con alcune parti ancora statiche o parziali.
+Lo stato attuale è quello di un **MVP avanzato ma ancora in sviluppo**.
 
-In particolare:
+Funzionalità oggi presenti:
+- autenticazione email/password
+- login via email o username
+- Google Sign-In
+- persistenza profilo utente su Firestore
+- home demo
+- garden demo
+- pagina search placeholder per futura estensione
+- profilo utente con ascolto realtime del documento Firestore
 
-- l’autenticazione email/password è implementata
-- la persistenza del profilo utente su Firestore è implementata
-- il login via **email o username** è supportato lato logica
-- le schermate `Home` e `Garden` sono oggi **UI statiche/demo**
-- la parte “piante” non è ancora collegata a repository o backend dedicati
-- non risulta presente integrazione Google Sign-In in questa versione
-- la navigazione principale authenticated/unauthenticated è già funzionante
+Funzionalità non ancora mature:
+- dominio piante reale
+- persistenza dati piante
+- ricerca reale
+- gestione avanzata di onboarding profilo post-Google
+- robustezza transazionale su username
 
-### Tecnologie utilizzate nel codice analizzato
-Dal codice risultano effettivamente presenti:
+### Tecnologie effettivamente utilizzate
+Dal codice e da `pubspec.yaml` risultano presenti:
+- Flutter
+- Material 3
+- flutter_bloc
+- Equatable
+- Firebase Core
+- Firebase Authentication
+- Cloud Firestore
+- Google Sign-In
+- Google Fonts
+- Repository pattern
 
-- **Flutter**
-- **Material 3**
-- **flutter_bloc**
-- **Cubit + Bloc**
-- **Equatable**
-- **Firebase Core**
-- **Firebase Authentication**
-- **Cloud Firestore**
-- **Google Fonts**
-- pattern di accesso dati basato su **Repository**
+### Configurazioni visibili in `pubspec.yaml`
+Il package name dichiarato è:
+- `plantly_app`
+
+Sono inoltre dichiarati:
+- `flutter_native_splash`
+- `flutter_launcher_icons`
+- asset sotto `assets/images/` e `assets/icon/`
+
+Quindi il nome tecnico del package, nello stato attuale analizzato, è coerente con Plantly.
 
 ---
 
 ## 2. 🏗 Architettura generale
 
-### Stile architetturale adottato
-L’architettura reale è una combinazione di:
+### Architettura reale
+Il progetto adotta un layered approach pragmatico con una buona separazione tra livelli:
+- `pages/` per la UI
+- `widgets/` per componenti riutilizzabili
+- `cubits/` e `blocs/` per logica e stato
+- `repositories/` per accesso dati
+- `features/` per modelli e risorse trasversali
 
-- **presentation layer** con `pages/` e `widgets/`
-- **state management** con `Bloc` e `Cubit`
-- **data access** con `repositories/`
-- **feature models** in `features/`
+Non è una Clean Architecture completa, perché mancano un domain layer puro e use case espliciti, ma la struttura è già adatta a un MVP scalabile.
 
-Non è una Clean Architecture completa in senso rigoroso, perché non esistono use case/interactor separati né domain layer puro. Tuttavia, la separazione dei livelli è già abbastanza chiara e vicina a una struttura scalabile.
-
-### Struttura per livelli
+### Separazione dei livelli
 
 #### UI — `pages/`
 Contiene le schermate principali:
-
 - `splash_screen.dart`
 - `sign_in_page.dart`
 - `sign_up_page.dart`
 - `main_shell_page.dart`
 - `home_page.dart`
 - `garden_page.dart`
+- `plant_search_page.dart`
 - `profile_page.dart`
+- `fake_page.dart`
 
-Ruolo: rendering della UI e interazione con Cubit/Bloc.
+Ruolo: rendering, binding a cubit/bloc, ascolto stato e gestione del layout.
 
 #### Widgets — `widgets/`
-Contiene componenti riutilizzabili, anche se al momento il numero è limitato:
-
+Contiene:
+- `widgets/auth/google_auth_button.dart`
 - `widgets/bottom_appbar/plantly_bottom_navigation.dart`
-- `widgets/bottom_appbar/navigation_item.dart`
+- `widgets/bottom_appbar/navigation_item.dart` (via `part`)
 - `widgets/sign_up/password_strength.dart`
-- `widgets/appbar.dart` è presente ma vuoto
+- `widgets/appbar.dart` (vuoto)
+
+Ruolo: componenti UI riutilizzabili.
 
 #### Logica — `blocs/` e `cubits/`
-La logica è distribuita in modo coerente:
+Sono presenti:
+- `AuthBloc`
+- `SignInCubit`
+- `SignUpCubit`
+- `SignOutCubit`
+- `ProfileCubit`
+- `SignInFormCubit`
+- `SignUpFormCubit`
+- `AuthFlowCubit`
+- `ObscureCubit`
 
-- `AuthBloc` per lo stato di autenticazione globale
-- Cubit dedicati per sign-in, sign-up, sign-out
-- Cubit form per validazione e raccolta input
-- Cubit per stato di visibilità password
-- Cubit per navigazione auth secondaria (`AuthFlowCubit`)
-- Cubit per caricamento profilo (`ProfileCubit`)
-
-#### Repository — `repositories/`
-Sono presenti due repository:
-
+#### Dati — `repositories/`
+Sono presenti:
 - `AuthRepository`
 - `UserRepository`
-
-Questa separazione è corretta:
-- `AuthRepository` gestisce Firebase Auth
-- `UserRepository` gestisce i documenti utente su Firestore e il lookup username/email
 
 ### Flusso dati reale
 
 ```text
-UI (Page)
-  -> Cubit/FormCubit
-      -> Cubit di azione (SignInCubit / SignUpCubit / SignOutCubit / ProfileCubit)
-          -> Repository
-              -> Firebase Auth / Firestore
+Page
+  -> FormCubit / ActionCubit
+      -> Repository
+          -> Firebase Auth / Firestore
 
-Firebase Auth authStateChanges
+Firebase authStateChanges
   -> AuthBloc
-      -> MaterialApp builder listeners
+      -> App (MultiBlocListener)
           -> Navigazione globale
 ```
 
 ### Valutazione architetturale
-Punti buoni:
+Punti forti:
+- confini di layer abbastanza rispettati
+- i repository non contengono UI
+- i cubit non navigano direttamente
+- l’auth globale dipende dallo stream Firebase e non da eventi artificiali locali
 
-- chiara separazione repository/logica/UI
-- `AuthBloc` centrato sullo stream `authStateChanges`
-- form validation non mescolata ai repository
-- `UserRepository` separato da `AuthRepository`
-
-Limiti attuali:
-
-- assenza di un vero domain layer
-- alcune page contengono ancora troppa UI custom interna anziché componenti riusabili
-- parti statiche di prodotto (`Home`, `Garden`) non sono ancora collegate a uno stato applicativo reale
-- `ProfilePage` innesca `watchProfile()` nel `build`, che è una side effect gestita con guardie ma non idealmente posizionata
+Punti deboli:
+- assenza di use case/domain layer
+- alcuni side effect ancora in page
+- alcune classi e file residui (`fake_page.dart`, `widgets/appbar.dart`)
+- feature plants ancora puramente mock/placeholder
 
 ---
 
 ## 3. 🔐 Sistema di autenticazione
 
 ### Come funziona `AuthBloc`
-File coinvolti:
+`AuthBloc` ascolta `AuthRepository.authStateChanges` e converte lo stream Firebase in uno stato globale dell’app.
 
-- `blocs/auth/auth_bloc.dart`
-- `blocs/auth/auth_bloc_event.dart`
-- `blocs/auth/auth_bloc_state.dart`
+Eventi:
+- `AuthUserChanged`
 
-`AuthBloc` ha il compito di derivare lo stato auth globale direttamente da:
-
-- `AuthRepository.authStateChanges`
-
-Flusso:
-
-1. il bloc si sottoscrive allo stream Firebase in fase di costruzione
-2. ogni cambiamento genera `AuthUserChanged`
-3. il bloc emette:
-   - `AuthStatus.authenticated`
-   - `AuthStatus.unauthenticated`
-   - stato iniziale `AuthStatus.unknown`
-
-### Stati disponibili
-`AuthBlocState` modella:
-
+Stati:
 - `unknown`
 - `authenticated`
 - `unauthenticated`
 
-In stato `authenticated` viene mantenuto anche `fb.User user`.
+Flusso:
+1. il bloc si sottoscrive a `authStateChanges`
+2. ogni cambio emette `AuthUserChanged`
+3. lo stato diventa `authenticated` o `unauthenticated`
+4. `App` ascolta il bloc e naviga
 
 ### Ruolo di `AuthRepository`
-`AuthRepository` incapsula Firebase Authentication e oggi espone:
+Responsabilità reali:
+- login email/password
+- registrazione email/password
+- Google Sign-In
+- logout
+- esposizione di `currentUser` e `authStateChanges`
 
-- `currentUser`
-- `authStateChanges`
-- `signIn(email, password)`
-- `signUp(email, password, displayName)`
+Metodi principali:
+- `signIn(...)`
+- `signUp(...)`
+- `signInWithGoogle()`
 - `signOut()`
 
-Il repository fa bene il minimo necessario e non contiene logica di UI o navigazione.
+### Flusso login email/username
+1. l’utente compila il form in `SignInPage`
+2. `SignInFormCubit` valida solo presenza di identificatore e password
+3. `SignInCubit.signIn()` chiama `UserRepository.resolveEmailFromIdentifier()`
+4. se l’identificatore è email, la restituisce invariata
+5. se è username, Firestore viene interrogato per recuperare l’email associata
+6. `AuthRepository.signIn()` esegue il login Firebase
+7. `AuthBloc` riceve il cambiamento auth
+8. `App` naviga verso la shell autenticata
 
-### Flusso login
-Login reale nel codice:
+### Flusso registrazione email/password
+1. `SignUpPage` raccoglie i dati utente
+2. `SignUpFormCubit` valida i campi
+3. `SignUpCubit.signUp()` verifica `usernameExists()`
+4. `AuthRepository.signUp()` crea l’utente Firebase
+5. `UserRepository.createUserProfile()` scrive il profilo in Firestore
+6. se Firestore fallisce, il cubit tenta `authUser.delete()`
+7. l’evento Firebase attiva `AuthBloc`
 
-1. l’utente compila form in `SignInPage`
-2. `SignInFormCubit` valida i campi
-3. `SignInCubit.signIn(identifier, password)` riceve i dati
-4. `UserRepository.resolveEmailFromIdentifier()` converte:
-   - email → stessa email
-   - username → email letta da Firestore
-5. `AuthRepository.signIn()` esegue `signInWithEmailAndPassword`
-6. Firebase emette il cambio auth
-7. `AuthBloc` riceve il nuovo utente
-8. `App` naviga verso `Routes.home`
+### Flusso Google Sign-In
+Il supporto Google è presente sia in sign-in che in sign-up.
 
-### Flusso registrazione
-Registrazione reale nel codice:
+#### Web
+`AuthRepository.signInWithGoogle()` usa:
+- `FirebaseAuth.signInWithPopup(GoogleAuthProvider())`
 
-1. `SignUpFormCubit` valida username, nome, cognome, email, paese, città, password
-2. `SignUpCubit.signUp(...)` controlla unicità username via Firestore
-3. `AuthRepository.signUp(...)` crea l’utente in Firebase Auth
-4. viene creato un `PlantlyUser`
-5. `UserRepository.createUserProfile(...)` salva il profilo in `users/{uid}`
-6. in caso di fallimento del salvataggio profilo, viene tentato `authUser.delete()`
-7. il cambio auth viene rilevato da `AuthBloc`
+#### Native
+Usa:
+- `GoogleSignIn.instance.initialize(serverClientId: ...)`
+- `authenticate()`
+- conversione in Firebase credential
+- `signInWithCredential(...)`
+
+#### Profilo utente dopo Google
+Dopo il login con Google:
+- `SignInCubit.signInWithGoogle()` chiama `UserRepository.ensureGoogleUserProfile(...)`
+- `SignUpCubit.signUpWithGoogle()` fa lo stesso
+
+Se il documento utente non esiste, viene creato automaticamente un profilo minimo con:
+- username generato
+- nome/cognome derivati da `displayName`
+- email
+- `country` e `city` vuoti
+- `photoURL` come `imageUrl`
 
 ### Flusso logout
-`SignOutCubit` richiama `AuthRepository.signOut()`.  
-Il logout non naviga direttamente: la navigazione dipende dal cambio emesso da Firebase e recepito da `AuthBloc`.
+`SignOutCubit` richiama `AuthRepository.signOut()`.
+
+`AuthRepository.signOut()` esegue in parallelo:
+- `FirebaseAuth.signOut()`
+- `GoogleSignIn.signOut()` in modalità safe
+
+La navigazione post-logout avviene via `AuthBloc`, non tramite il cubit stesso.
 
 ### Punti critici o migliorabili
-1. **Username login dipendente da Firestore**  
-   Se il documento profilo manca o è incoerente, il login con username non può funzionare.
+1. **`_serverClientIdForCurrentPlatform()` restituisce sempre `null`**  
+   Questo rende la configurazione Google nativa fragile o dipendente solo dalla configurazione esterna. È il problema auth più importante oggi.
 
-2. **Unicità username non transazionale**  
-   `usernameExists()` + `createUserProfile()` non garantiscono unicità assoluta in caso di richieste concorrenti.
+2. **Google crea profili con campi incompleti**  
+   `country` e `city` restano vuoti. Non esiste ancora un onboarding dedicato al completamento profilo.
 
-3. **Assenza di provider multipli**  
-   In questa versione non risultano Google Sign-In o altri provider.
+3. **Username login dipendente da Firestore**  
+   Se il documento utente manca o è inconsistente, il login via username fallisce.
 
-4. **Rollback registrazione fragile ma accettabile**  
-   Se Firestore fallisce dopo la creazione auth, il codice prova a cancellare l’utente auth. È una buona misura, ma non elimina tutti i possibili edge case.
+4. **Rollback registrazione solo parziale**  
+   Il tentativo di `authUser.delete()` migliora la coerenza, ma non copre tutti gli edge case.
+
+5. **Possibile doppia navigazione teorica**  
+   `_navigate()` in `App` usa `addPostFrameCallback` e il listener usa `listenWhen`, quindi la situazione è migliorata. Resta comunque un punto da tenere monitorato se in futuro aumentano i listener di navigazione.
 
 ---
 
@@ -241,8 +256,7 @@ Il logout non naviga direttamente: la navigazione dipende dal cambio emesso da F
 ### Modello utente
 File: `features/user/user.dart`
 
-Il modello `PlantlyUser` contiene:
-
+`PlantlyUser` contiene:
 - `id`
 - `username`
 - `name`
@@ -256,7 +270,6 @@ Il modello `PlantlyUser` contiene:
 - `updatedAt`
 
 Sono presenti anche:
-
 - `fullName`
 - `usernameLowercase`
 - `copyWith()`
@@ -264,20 +277,17 @@ Sono presenti anche:
 - `fromJson()`
 
 ### Ruolo di `UserRepository`
-File: `repositories/user_repository.dart`
-
 Responsabilità reali:
-
-- osservare un profilo utente (`watchUser`)
+- osservare un profilo (`watchUser`)
 - caricare un profilo (`getUser`)
-- verificare esistenza username (`usernameExists`)
-- creare profilo (`createUserProfile`)
-- aggiornare profilo (`updateUserProfile`)
-- risolvere login `email/username` → email (`resolveEmailFromIdentifier`)
+- controllare esistenza username (`usernameExists`)
+- creare un profilo (`createUserProfile`)
+- aggiornare un profilo (`updateUserProfile`)
+- risolvere email da username/email (`resolveEmailFromIdentifier`)
+- creare automaticamente il profilo minimo per utenti Google (`ensureGoogleUserProfile`)
 
 ### Dati salvati
-Nel documento utente Firestore vengono salvati:
-
+Nel documento `users/{uid}` vengono salvati:
 - `id`
 - `username`
 - `username_lowercase`
@@ -292,27 +302,27 @@ Nel documento utente Firestore vengono salvati:
 - `updatedAt`
 
 ### Flusso creazione profilo
-Il profilo non viene creato da `AuthRepository`, ma da `SignUpCubit` attraverso `UserRepository`.  
-Questa scelta è corretta perché separa:
+#### Registrazione standard
+La creazione profilo è orchestrata da `SignUpCubit`, non da `AuthRepository`.
 
-- autenticazione
-- dati utente applicativi
-
-### Osservazioni tecniche
-- il repository usa la collection `users`
-- il document id è il `uid`
-- `createdAt` e `updatedAt` sono scritti come stringhe ISO UTC, non come `serverTimestamp`
-- `_fromFirestore()` supporta sia `Timestamp` sia stringa per la data
+#### Google
+`ensureGoogleUserProfile()`:
+- legge `users/{uid}`
+- se il profilo esiste, lo restituisce
+- altrimenti genera uno username disponibile e crea il documento
 
 ### Criticità
-1. **Date come stringa**  
-   Funzionano, ma sono meno robuste di `FieldValue.serverTimestamp()`.
+1. **Username non atomico**  
+   `usernameExists()` seguito da `createUserProfile()` non è transazionale.
 
-2. **Dipendenza forte dal campo `username_lowercase`**  
-   È corretta per il lookup, ma va considerata come chiave tecnica da preservare in tutte le future migrazioni.
+2. **Date salvate come stringa**  
+   `createdAt` e `updatedAt` vengono salvati in ISO string, non come `serverTimestamp`.
 
-3. **Assenza di schema validation lato backend**  
-   Tutta la validazione è lato app. Per un ambiente production-ready serve rafforzamento via Firestore rules/backend.
+3. **Duplicazione di deserializzazione**  
+   `_fromFirestore()` nel repository e `PlantlyUser.fromJson()` nel modello non sono allineati al 100%.
+
+4. **Google profile incompleto**  
+   `country` e `city` sono vuoti per i nuovi utenti Google.
 
 ---
 
@@ -320,217 +330,150 @@ Questa scelta è corretta perché separa:
 
 ### `pages/splash_screen.dart`
 **Scopo**  
-Schermata iniziale visuale con logo, titolo e animazione di caricamento.
+Schermata iniziale visiva.
 
 **Ruolo nella navigazione**  
-È la route iniziale (`Routes.splash`).
+Route iniziale.
 
-**Dipendenze principali**  
-Nessuna dipendenza diretta da Cubit/Bloc.
-
-**Osservazioni**
-- non contiene logica di decisione routing
-- la permanenza in splash dipende indirettamente al fatto che `AuthBloc` guiderà la navigazione quando emette stato diverso da `unknown`
-
-**Criticità**
-- la schermata non definisce un timeout né una strategia fallback se Firebase non inizializza o se lo stato auth resta `unknown`
-
----
+**Criticità**  
+Nessuna logica fallback se lo stato auth restasse `unknown` troppo a lungo.
 
 ### `pages/sign_in_page.dart`
 **Scopo**  
-Form di accesso con supporto a email o username + password.
+Accesso utente con email/username + password e pulsante Google.
 
-**Ruolo nella navigazione**  
-Schermata di ingresso per utenti non autenticati.
-
-**Dipendenze principali**
+**Dipendenze**
 - `SignInCubit`
 - `SignInFormCubit`
 - `ObscureCubit`
 - `AuthFlowCubit`
-
-**Comportamento**
-- ascolta `SignInCubit` per mostrare errori con `SnackBar`
-- usa `SignInFormCubit` per validazione
-- usa `ObscureCubit` per mostrare/nascondere password
-- usa `AuthFlowCubit` per passare a Sign Up
+- `GoogleAuthButton`
 
 **Criticità**
-- contiene molto markup UI monolitico: il form potrebbe essere scomposto in widget riutilizzabili
-- la pagina usa direttamente `ScaffoldMessenger` e listener localizzati, cosa accettabile ma da standardizzare in futuro
-
----
+- molto markup inline
+- gestione errori ancora localizzata via `SnackBar`
 
 ### `pages/sign_up_page.dart`
 **Scopo**  
-Form di registrazione completa con dati profilo.
+Registrazione completa email/password + ingresso con Google.
 
-**Ruolo nella navigazione**  
-Schermata di creazione account.
-
-**Dipendenze principali**
+**Dipendenze**
 - `SignUpCubit`
 - `SignUpFormCubit`
 - `ObscureCubit`
 - `AuthFlowCubit`
 - `PasswordStrength`
-
-**Comportamento**
-- raccoglie username, nome, cognome, email, paese, città, password, conferma password
-- visualizza feedback di forza password
-- usa validazione progressiva e validazione finale su submit
+- `GoogleAuthButton`
 
 **Criticità**
-- pagina molto lunga e fortemente monolitica
-- i campi non sono stati estratti in widget form dedicati
-- è una delle schermate più candidate a refactor di presentation
-
----
+- pagina lunga e monolitica
+- componentizzazione migliorabile
 
 ### `pages/main_shell_page.dart`
 **Scopo**  
-Contenitore principale authenticated con navigazione tab interna.
+Shell autenticata con bottom navigation.
 
-**Ruolo nella navigazione**
-Espone tre tab:
-
+**Pagine contenute**
 - `HomePage`
 - `GardenPage`
+- `PlantSearchPage`
 - `ProfilePage`
 
-**Dipendenze principali**
-- `PlantlyBottomNav`
-
-**Comportamento**
-- mantiene `_currentIndex`
-- usa `IndexedStack`
-- cambia tab con bottom navigation custom
+**Dettagli tecnici reali**
+- `extendBody: true`
+- `AnimatedSwitcher`
+- `IndexedStack`
+- `ValueKey(_currentIndex)`
 
 **Criticità**
-- la selezione tab è solo locale alla pagina; nessuna persistenza dello stato selezionato
-- per un’app più grande, si potrebbe preferire una shell con router nested
-
----
+- stato tab solo locale e non persistito
 
 ### `pages/home_page.dart`
-**Scopo**
-Dashboard introduttiva con messaggi, metriche e checklist.
+**Scopo**  
+Dashboard informativa.
 
-**Ruolo nella navigazione**
-Prima tab nella shell authenticated.
-
-**Dipendenze principali**
-- `LightTheme`
-
-**Comportamento reale**
-- contenuto interamente statico
-- usa widget privati `_SoftBadge`, `_MetricCard`, `_ChecklistTile`
-
-**Criticità**
-- nessun collegamento a stato reale, backend o repository
-- ottima come UI demo, non ancora come feature di dominio
-
----
+**Stato reale**  
+UI demo/statica.
 
 ### `pages/garden_page.dart`
-**Scopo**
-Presentazione visiva del “giardino virtuale”.
+**Scopo**  
+Giardino virtuale.
 
-**Ruolo nella navigazione**
-Seconda tab nella shell authenticated.
+**Stato reale**  
+Dati mock e interazioni non collegate a casi d’uso reali.
 
-**Dipendenze principali**
-- modello `Plant`
-- `LightTheme`
+### `pages/plant_search_page.dart`
+**Scopo**  
+Placeholder production-ready per futura ricerca piante.
 
-**Comportamento reale**
-- contiene una lista statica `_plants`
-- mostra carte planta con umidità, luce, salute e azione successiva
-- pulsanti non collegati a use case reali
+**Stato reale**  
+Pagina statica ma ben integrata nella navigazione.
 
-**Criticità**
-- dati completamente mockati
-- nessun `Cubit` o `Repository`
-- nessuna persistenza o sincronizzazione
+**Contenuto**
+- heading
+- search bar visiva non funzionale
+- card “In arrivo”
+- chip di categorie future
 
----
+**Valutazione**  
+Buon placeholder: chiaro, coerente, non rompe l’architettura.
 
 ### `pages/profile_page.dart`
-**Scopo**
-Visualizzazione del profilo utente autenticato e logout.
+**Scopo**  
+Visualizzazione profilo utente e logout.
 
-**Ruolo nella navigazione**
-Terza tab nella shell authenticated.
-
-**Dipendenze principali**
+**Dipendenze**
 - `AuthBloc`
 - `ProfileCubit`
 - `SignOutCubit`
 
-**Comportamento**
-- legge l’utente auth da `AuthBloc`
-- avvia `watchProfile(authUser.uid)`
-- mostra:
-  - nome
-  - email
-  - username
-  - località
-  - stato di sincronizzazione
+**Criticità principale**  
+`watchProfile(authUser.uid)` viene invocato nel `build()`.
 
-**Criticità**
-- `watchProfile(authUser.uid)` viene chiamato dentro `build`
-- il cubit contiene una guardia che limita le sottoscrizioni duplicate, ma il side effect nel `build` resta una scelta migliorabile
-- logica di calcolo iniziali (`_initials`) è dentro la pagina; accettabile ma non idealmente riusabile
-
----
+Funziona grazie alla guardia nel cubit, ma semanticamente è un side effect posizionato male.
 
 ### `pages/fake_page.dart`
-**Scopo**
-Pagina placeholder con testo “prova”.
+**Stato**  
+Presente ma non parte del flusso principale.
 
-**Stato**
-Presente nel progetto ma al momento non collegata al flusso principale.
-
-**Criticità**
-- codice morto / di supporto temporaneo
-- da rimuovere o utilizzare esplicitamente
+**Valutazione**  
+Dead code o residuo temporaneo.
 
 ---
 
 ## 6. 🧩 Widget riutilizzabili
 
-### `widgets/bottom_appbar/plantly_bottom_navigation.dart`
-Bottom navigation personalizzata con tre voci:
+### `widgets/auth/google_auth_button.dart`
+Pulsante riutilizzabile per accesso/registrazione con Google.
 
+Usato in:
+- `SignInPage`
+- `SignUpPage`
+
+### `widgets/bottom_appbar/plantly_bottom_navigation.dart`
+Bottom navigation custom con quattro voci:
 - Home
 - Giardino
+- Cerca
 - Profilo
 
 Usata in:
 - `MainShellPage`
 
 ### `widgets/bottom_appbar/navigation_item.dart`
-Componente privato `_NavItem` usato esclusivamente dalla bottom nav.
+Parte privata della bottom navigation.
 
 ### `widgets/sign_up/password_strength.dart`
-Widget che visualizza:
-
-- barre di forza password
-- testo descrittivo
+Visualizza la forza password nella registrazione.
 
 Usato in:
 - `SignUpPage`
 
-Dipende da:
-- enum `Strength` in `features/enumType.dart`
-
 ### `widgets/appbar.dart`
-File presente ma vuoto.
+File vuoto.
 
-**Valutazione**
-- è un forte indicatore di refactor incompleto o codice non ancora rimosso
-- da eliminare o implementare realmente
+Valutazione:
+- codice morto / refactor incompleto
 
 ---
 
@@ -538,7 +481,7 @@ File presente ma vuoto.
 
 ### `AuthBloc`
 **Responsabilità**
-Gestire lo stato auth globale basato su Firebase.
+- derivare lo stato auth globale da Firebase
 
 **Eventi**
 - `AuthUserChanged`
@@ -548,15 +491,11 @@ Gestire lo stato auth globale basato su Firebase.
 - `authenticated`
 - `unauthenticated`
 
-**Interazioni**
-- ascolta `AuthRepository.authStateChanges`
-- guida la navigazione globale tramite listener in `App`
-
----
-
 ### `SignInCubit`
 **Responsabilità**
-Orchestrare il login.
+- login email/username
+- login con Google
+- mapping errori Firebase e Google
 
 **Stati**
 - `SignInInitial`
@@ -564,18 +503,11 @@ Orchestrare il login.
 - `SignInSuccess`
 - `SignInFailure`
 
-**Interazioni**
-- usa `UserRepository` per convertire username/email in email
-- usa `AuthRepository` per autenticare
-
-**Nota**
-`SignInSuccess` è emesso, ma la navigazione non dipende da esso: dipende dal cambio auth globale. Questa scelta è corretta.
-
----
-
 ### `SignUpCubit`
 **Responsabilità**
-Orchestrare la registrazione completa utente.
+- registrazione email/password
+- registrazione/accesso con Google
+- creazione profilo utente
 
 **Stati**
 - `SignUpInitial`
@@ -583,16 +515,9 @@ Orchestrare la registrazione completa utente.
 - `SignUpSuccess`
 - `SignUpFailure`
 
-**Interazioni**
-- controlla username via `UserRepository`
-- crea auth account via `AuthRepository`
-- crea profilo via `UserRepository`
-
----
-
 ### `SignOutCubit`
 **Responsabilità**
-Eseguire il logout.
+- logout
 
 **Stati**
 - `SignOutInitial`
@@ -600,14 +525,12 @@ Eseguire il logout.
 - `SignOutSuccess`
 - `SignOutFailure`
 
-**Interazioni**
-- usa `AuthRepository.signOut()`
-
----
+**Nota**
+Usa `sealed class`, a differenza di altri state file.
 
 ### `ProfileCubit`
 **Responsabilità**
-Osservare e pubblicare lo stato del profilo utente.
+- ascolto realtime del profilo Firestore
 
 **Stati**
 - `ProfileInitial`
@@ -615,124 +538,72 @@ Osservare e pubblicare lo stato del profilo utente.
 - `ProfileLoaded`
 - `ProfileFailure`
 
-**Interazioni**
-- usa `UserRepository.watchUser(userId)`
-- mantiene una `StreamSubscription`
-
-**Nota**
-Ha una protezione contro chiamate ripetute allo stesso `userId`.
-
----
+**Punto forte**
+Ha una guardia che evita resubscribe duplicate sullo stesso `userId`.
 
 ### `SignInFormCubit`
 **Responsabilità**
-Gestire stato e validazione del form di login.
+- stato e validazione del form di login
 
-**Campi**
-- `identifier`
-- `password`
-- errori associati
-- `showErrors`
-
-**Interazioni**
-- delega il submit a `SignInCubit`
-
----
+**Nota importante**
+`_validateIdentifier()` verifica solo che il campo non sia vuoto.
 
 ### `SignUpFormCubit`
 **Responsabilità**
-Gestire stato e validazione del form di registrazione.
-
-**Campi principali**
-- `username`
-- `nome`
-- `cognome`
-- `email`
-- `country`
-- `city`
-- `password`
-- `confirmPassword`
-- errori per ogni campo
-- `showErrors`
-- `passwordStrength`
-
-**Interazioni**
-- delega il submit a `SignUpCubit`
-
----
+- stato e validazione del form di registrazione
 
 ### `ObscureCubit`
 **Responsabilità**
-Gestire visibilità password/confirm password.
-
-**Stato**
-- `password`
-- `confirmPassword`
-
-**Interazioni**
-- usato nelle pagine auth
-
----
+- visibilità password / confirm password
 
 ### `AuthFlowCubit`
 **Responsabilità**
-Gestire la transizione manuale tra Sign In e Sign Up.
-
-**Stato**
-- destinazione opzionale:
-  - `signIn`
-  - `signUp`
-
-**Interazioni**
-- consumato da `App` tramite listener
+- gestire la transizione tra sign-in e sign-up
 
 **Valutazione**
-Funziona, ma è una soluzione locale e leggera, non un routing state manager completo.
+Semplice ma coerente con il perimetro attuale.
 
 ---
 
 ## 8. 🔄 Routing e navigazione
 
-### Come è gestito il routing
-Il routing è gestito in `app.dart` tramite:
-
+### Gestione del routing
+Il routing è centralizzato in `app.dart` con:
 - `MaterialApp`
 - `navigatorKey`
 - `initialRoute`
 - `onGenerateRoute`
-- `MultiBlocListener` nel `builder`
+- `MultiBlocListener`
 
 ### Ruolo di `app.dart`
-`App` è il punto centrale della navigazione globale.  
-Responsabilità reali:
-
-- definire route map via `onGenerateRoute`
-- applicare il tema
-- ascoltare `AuthBloc`
-- ascoltare `AuthFlowCubit`
-- eseguire navigazioni tramite `navigatorKey`
+Responsabilità:
+- definizione route
+- applicazione tema
+- ascolto `AuthBloc`
+- ascolto `AuthFlowCubit`
+- navigazione globale
 
 ### Uso di `navigatorKey`
-`App` usa un `GlobalKey<NavigatorState>` interno per navigare senza dipendere dal contesto di una singola pagina.  
-La funzione `_navigate()` usa `addPostFrameCallback` per evitare problemi se il bloc emette uno stato prima che il `Navigator` sia montato.
+La navigazione globale passa da `_navigatorKey`.
 
-Questa è una scelta pragmatica e corretta per il problema risolto.
+`_navigate()` usa `WidgetsBinding.instance.addPostFrameCallback(...)` per evitare problemi di navigazione prima del mount del Navigator.
 
-### Flusso splash → auth → home
-
+### Flusso reale
 ```text
 App start
-  -> Route iniziale: SplashScreen
+  -> SplashScreen
   -> AuthBloc ascolta Firebase authStateChanges
-  -> quando lo stato passa da unknown a:
-       authenticated   -> navigate(home)
-       unauthenticated -> navigate(signIn)
+  -> se authenticated: home
+  -> se unauthenticated: signIn
+  -> AuthFlowCubit gestisce il passaggio signIn <-> signUp
 ```
 
 ### Criticità
-- `SplashScreen` è solo visuale; la logica di decisione vive altrove
-- `onGenerateRoute` restituisce `null` sul default; meglio prevedere una fallback route o error page
-- l’architettura di routing è sufficiente per un MVP ma non ancora strutturata per feature complesse, deep linking o nested flows
+1. **default route senza fallback**  
+   `onGenerateRoute` restituisce `null` nel caso default.
+
+2. **potenziale fragilità futura se aumentano i trigger di navigazione**  
+   Attualmente la situazione è sotto controllo, ma il design richiede disciplina per restare robusto.
 
 ---
 
@@ -740,213 +611,157 @@ App start
 
 ### Struttura del tema
 Il tema è definito in:
-
 - `features/theme/models/theme.dart`
 
-Esiste una sola implementazione esplicita:
+Esiste una implementazione principale:
 - `LightTheme.make`
 
-### Palette colori
-Colori principali definiti:
-
-- `seed`
-- `primary`
-- `deepForest`
-- `moss`
-- `sand`
-- `clay`
-- `mist`
-
-La palette è coerente con un prodotto “green/nature” ma evita il solo verde saturo, usando anche toni sabbia e terra.
+### Palette
+La palette usa toni naturali e morbidi:
+- verdi
+- sabbia
+- clay
+- toni neutri chiari
 
 ### Tipografia
-Il progetto usa:
+Uso di `GoogleFonts` e configurazione coerente dei text styles.
 
-- `GoogleFonts.interTextTheme`
-- override di diversi stili:
-  - `displayLarge`
-  - `displaySmall`
-  - `headlineMedium`
-  - `titleLarge`
-  - `titleMedium`
-  - `bodyLarge`
-  - `bodyMedium`
-
-### Componenti tematizzati
-Nel theme sono già configurati:
-
-- `AppBarTheme`
-- `CardTheme`
-- `SnackBarTheme`
-- `ElevatedButtonTheme`
-- `OutlinedButtonTheme`
-- `TextButtonTheme`
-- `InputDecorationTheme`
-
-### Coerenza design
-Nel complesso la UI è visivamente coerente:
-
-- uso sistematico di bordi arrotondati
-- carte con ombre morbide
-- gradiente leggero su molte schermate
-- linguaggio visivo consistente tra Home, Garden e Profile
+### Coerenza del design
+Nel complesso la UI è coerente:
+- bordi arrotondati
+- carte morbide
+- ombre leggere
+- linguaggio visivo consistente tra home, giardino, ricerca e profilo
 
 ### Punti migliorabili
-1. alcune schermate definiscono molto styling inline invece di appoggiarsi di più al theme
-2. mancano componenti design-system riusabili per card, section header, empty state, form field wrapper
-3. il file theme si trova sotto `features/theme/models/`, ma è di fatto un asset di **design system**, non un “model”
+- troppo styling inline in alcune page
+- pochi widget design-system estratti
+- collocazione del file theme poco intuitiva (`features/theme/models/`)
 
 ---
 
 ## 10. ⚠️ Problemi e criticità
 
-### 10.1 Username uniqueness non atomica
-Il controllo:
+### 10.1 `watchProfile()` nel `build()`
+**Gravità:** media  
+**File:** `profile_page.dart`, `profile_cubit.dart`
 
-- `usernameExists()`
-- poi `createUserProfile()`
+`ProfilePage` invoca `watchProfile(authUser.uid)` nel `build()`.
 
-non è atomico. In condizioni concorrenti due richieste possono superare il controllo e provare a usare lo stesso username.
-
-**Soluzione consigliata**
-- usare documento dedicato/indice per username
-- oppure transazione Firestore
-
----
-
-### 10.2 `ProfilePage` avvia side effect nel `build`
-`watchProfile(authUser.uid)` è invocato nel `build`.
-
-Il cubit evita sottoscrizioni ripetute, ma questa scelta resta fragile e meno leggibile.
+Funziona grazie alla guardia interna del cubit, ma è semanticamente un side effect nel posto sbagliato.
 
 **Soluzione consigliata**
-- spostare l’avvio in un widget stateful con `initState`
-- oppure creare la pagina con il `ProfileCubit` già istruito all’ingresso
+- spostare l’avvio in `initState()` di un widget stateful
+- oppure istanziare la pagina già con il cubit avviato
 
----
+### 10.2 `_fromFirestore()` e `fromJson()` non perfettamente allineati
+**Gravità:** media  
+**File:** `user_repository.dart`, `user.dart`
 
-### 10.3 `HomePage` e `GardenPage` sono statiche
-Le due schermate principali di prodotto sono, allo stato attuale, quasi interamente demo UI.
+Esistono due percorsi di deserializzazione simili ma non identici.
 
-**Implicazioni**
-- l’MVP è credibile visivamente ma non ancora funzionale sul dominio piante
-- manca uno state management dedicato alle piante
+**Rischio**
+- evoluzioni future possono rompere uno dei due flussi
 
----
+**Soluzione consigliata**
+- unificare la mappatura in un solo entry point
 
-### 10.4 File vuoti o inutilizzati
-- `widgets/appbar.dart` è vuoto
-- `pages/fake_page.dart` sembra non usata nel flusso attuale
+### 10.3 `_serverClientIdForCurrentPlatform()` sempre `null`
+**Gravità:** alta  
+**File:** `auth_repository.dart`
+
+La funzione restituisce `null` per tutte le piattaforme.
 
 **Impatto**
-- aumenta rumore nel codice
-- peggiora l’onboarding dei nuovi sviluppatori
+- integrazione Google nativa fragile
+- possibile dipendenza eccessiva da configurazione esterna
 
----
+**Soluzione consigliata**
+- configurare e passare il client ID corretto dove necessario
 
-### 10.5 Validazione solo lato app
-La validazione form è ben presente lato client, ma manca visibilità su enforcement lato backend/rules.
+### 10.4 Unicità username non atomica
+**Gravità:** alta  
+**File:** `sign_up_cubit.dart`, `user_repository.dart`
 
-**Rischio**
-- dati incoerenti se regole Firestore o altri client non applicano gli stessi vincoli
-
----
-
-### 10.6 Date come stringhe
-`createdAt` e `updatedAt` sono memorizzati come stringhe ISO.
-
-**Rischi**
-- sorting/query meno solide
-- dipendenza da parsing client
-- assenza di source-of-truth server-side
-
----
-
-### 10.7 Assenza di gestione errori strutturata globale
-Gli errori vengono mostrati con `SnackBar` direttamente nelle pagine.
-
-**Limite**
-- comportamento non centralizzato
-- rischio di inconsistenza futura tra schermate
-
----
-
-### 10.8 `SystemUiMode.immersiveSticky` in `main.dart`
-Il progetto forza:
-
-- `SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky)`
-
-Per un’app gestionale/mobile standard questa scelta può essere discutibile.
-
-**Rischi**
-- UX inattesa
-- comportamento non uniforme tra dispositivi
-- potenziale attrito con pattern standard Android/iOS
-
----
-
-### 10.9 `onGenerateRoute` senza fallback forte
-Il default ritorna `null`.
+Il controllo `usernameExists()` non è transazionale rispetto alla creazione.
 
 **Rischio**
-- route sconosciute non gestite con una schermata esplicita di errore
+- collisioni in condizioni concorrenti
+
+**Soluzione consigliata**
+- usare transazione Firestore o indice dedicato username
+
+### 10.5 Rollback registrazione parziale
+**Gravità:** media  
+**File:** `sign_up_cubit.dart`
+
+Se il profilo Firestore fallisce dopo la creazione auth, viene tentata la cancellazione dell’utente Firebase.
+
+**Rischio**
+- coerenza non garantita al 100% in edge case
+
+### 10.6 Possibile double-fire della navigazione in scenari futuri
+**Gravità:** media  
+**File:** `app.dart`
+
+La logica attuale è ragionevole, ma la navigazione è centralizzata e sensibile alla moltiplicazione di listener o side effect futuri.
+
+### 10.7 `context.watch` / side effect combinati in `ProfilePage`
+**Gravità:** bassa-media  
+**File:** `profile_page.dart`
+
+La pagina miscela lettura stato e trigger side effect in modo non ideale.
+
+### 10.8 `fake_page.dart` è dead code
+**Gravità:** bassa  
+**File:** `pages/fake_page.dart`
+
+### 10.9 `widgets/appbar.dart` è vuoto
+**Gravità:** bassa  
+**File:** `widgets/appbar.dart`
+
+### 10.10 Incoerenza `sealed class` vs `abstract class`
+**Gravità:** bassa  
+**File:** state files
+
+Non rompe il runtime, ma abbassa la coerenza stilistica del progetto.
+
+### 10.11 Date come stringhe
+**Gravità:** media  
+**File:** `user_repository.dart`, `user.dart`
+
+Le date vengono salvate come stringhe ISO.
+
+**Soluzione consigliata**
+- usare `FieldValue.serverTimestamp()` e normalizzare il parsing
+
+### 10.12 Validazione solo client-side
+**Gravità:** media  
+**File:** forms + Firestore integration
+
+Manca visibilità su enforcement lato regole backend.
 
 ---
 
 ## 11. 🚀 Miglioramenti suggeriti
 
 ### Priorità alta
-
-#### A. Rendere atomico l’username
-Introdurre un meccanismo transazionale per garantire davvero unicità.
-
-#### B. Introdurre `PlantRepository` e stato piante
-Separare la feature piante dal mock attuale.  
-Struttura minima suggerita:
-
-- `repositories/plant_repository.dart`
-- `cubits/garden/garden_cubit.dart`
-- `features/plant/plant.dart` esteso
-- collegamento Firestore o altro backend
-
-#### C. Spostare il caricamento profilo fuori dal `build`
-Rendere `ProfilePage` più pulita e side-effect free.
-
-#### D. Pulire il codice morto
-Rimuovere:
-- `widgets/appbar.dart` se non serve
-- `pages/fake_page.dart` se non serve
+1. rendere atomico l’username
+2. introdurre onboarding profilo post-Google per completare `country` e `city`
+3. spostare `watchProfile()` fuori dal `build()`
+4. sistemare `_serverClientIdForCurrentPlatform()`
+5. aggiungere fallback route
 
 ### Priorità media
-
-#### E. Estrarre componenti riusabili dalle page auth
-Dalle page `SignInPage` e `SignUpPage` si possono estrarre:
-
-- auth card container
-- branded header/logo section
-- field wrappers
-- footers di navigazione auth
-
-#### F. Migliorare il layer di error handling
-Introdurre eccezioni di dominio/app e mappatura errori più uniforme.
-
-#### G. Migliorare il theme placement
-Spostare il theme in un’area più centrale tipo:
-
-- `core/theme/`
-- oppure `presentation/theme/`
+1. unificare `fromJson()` e `_fromFirestore()`
+2. introdurre un error handling più centralizzato
+3. estrarre componenti riutilizzabili dalle page auth
+4. sostituire le date stringa con timestamp reali
 
 ### Priorità bassa
-
-#### H. Aggiungere route fallback
-Pagina `NotFoundPage` o route error.
-
-#### I. Introdurre test unitari e widget test
-Particolarmente utili per:
-- `AuthBloc`
-- `SignInCubit`
-- `SignUpCubit`
-- `UserRepository`
+1. rimuovere dead code
+2. uniformare gli state file
+3. riorganizzare il theme in una cartella più semantica
 
 ---
 
@@ -954,56 +769,43 @@ Particolarmente utili per:
 
 ### Come evolvere il progetto
 
-#### 1. Evoluzione feature autenticazione
-Lo stato attuale è una buona base per estendere:
-
-- Google Sign-In
+#### Auth
+La base auth è buona per estendere:
 - reset password
 - verifica email
-- completamento profilo post-provider esterni
+- onboarding profilo incompleto
+- multi-provider più robusti
 
-L’integrazione andrebbe fatta **senza spostare logica nelle page**, mantenendo:
-
-- repository per provider auth
-- cubit/bloc per orchestrazione
-- eventuale onboarding profilo separato
-
-#### 2. Evoluzione feature piante
-Per passare dal mock a una feature reale, il percorso corretto è:
-
+#### Plants
+La progressione naturale è:
 ```text
 Plant model
   -> PlantRepository
-  -> GardenCubit / PlantDetailsCubit
+  -> GardenCubit / PlantSearchCubit / PlantDetailsCubit
   -> Pages
 ```
 
-Funzionalità future coerenti con la struttura attuale:
-
-- lista piante reale per utente
+Feature coerenti con la struttura attuale:
+- lista piante reali
 - dettaglio pianta
-- annaffiatura manuale
-- cronologia eventi
+- ricerca reale
 - reminder e calendario
-- sincronizzazione con vaso smart
+- eventi di annaffiatura
+- integrazione IoT futura
 
-#### 3. Evoluzione della navigazione
-Per un MVP la navigazione attuale va bene.  
-Se il prodotto cresce, sarà utile valutare:
-
+#### Navigazione
+Per ora la soluzione attuale regge. Se l’app cresce, sarà opportuno valutare:
 - router dichiarativo
 - route guards
 - nested navigation
-- gestione deep link
+- deep linking
 
-#### 4. Mantenere il codice pulito nel tempo
-Regole consigliate per il team:
-
-- nessuna logica repository nelle page
-- nessuna navigazione business-driven nei repository
-- form state separato dagli action cubit
-- modelli dominio separati da DTO quando il backend cresce
-- ogni nuova feature con struttura dedicata: page + cubit/bloc + repository + model
+#### Manutenibilità
+Regole consigliate:
+- niente side effect nel `build()`
+- niente repository chiamati direttamente dalle page
+- niente navigazione dentro i repository
+- ogni feature nuova con page + cubit/bloc + repository + model dedicati
 
 ---
 
@@ -1015,6 +817,7 @@ Regole consigliate per il team:
 
 ### Core
 - `core/routes.dart`
+- `firebase_options.dart`
 
 ### Bloc
 - `blocs/auth/auth_bloc.dart`
@@ -1022,7 +825,6 @@ Regole consigliate per il team:
 - `blocs/auth/auth_bloc_state.dart`
 
 ### Cubit
-- `cubits/custom/obscure/obscure_cubit.dart`
 - `cubits/forms/sign_in_form_cubit.dart`
 - `cubits/forms/sign_up_form_cubit.dart`
 - `cubits/navigation/auth_flow_cubit.dart`
@@ -1034,8 +836,9 @@ Regole consigliate per il team:
 - `cubits/sign_out/sign_out_state.dart`
 - `cubits/sign_up/sign_up_cubit.dart`
 - `cubits/sign_up/sign_up_state.dart`
+- `cubits/custom/obscure/obscure_cubit.dart`
 
-### Models / Features
+### Features / Models
 - `features/enumType.dart`
 - `features/plant/plant.dart`
 - `features/theme/models/theme.dart`
@@ -1046,6 +849,7 @@ Regole consigliate per il team:
 - `pages/garden_page.dart`
 - `pages/home_page.dart`
 - `pages/main_shell_page.dart`
+- `pages/plant_search_page.dart`
 - `pages/profile_page.dart`
 - `pages/sign_in_page.dart`
 - `pages/sign_up_page.dart`
@@ -1057,7 +861,7 @@ Regole consigliate per il team:
 
 ### Widgets
 - `widgets/appbar.dart`
-- `widgets/bottom_appbar/navigation_item.dart`
+- `widgets/auth/google_auth_button.dart`
 - `widgets/bottom_appbar/plantly_bottom_navigation.dart`
 - `widgets/sign_up/password_strength.dart`
 
@@ -1066,25 +870,19 @@ Regole consigliate per il team:
 ## Appendice B — Valutazione finale
 
 ### Cosa è già solido
-- base auth ben impostata
-- repository separati correttamente
-- login con email o username già previsto
-- buon livello di UX visiva per un MVP
-- theme consistente
-- separazione abbastanza chiara tra livelli
+- separazione generale dei layer buona per un MVP
+- auth stream-first ben impostata
+- Google Sign-In integrato a livello applicativo
+- profilo utente su Firestore ben separato da Firebase Auth
+- search page placeholder aggiunta in modo pulito
+- bottom navigation aggiornata coerentemente
 
 ### Cosa oggi limita davvero il progetto
-- feature “garden” ancora mockata
-- alcuni punti architetturali non ancora puliti del tutto
-- unicità username non blindata
-- assenza di test
-- alcuni file residui/incompleti
+- feature plants ancora mock
+- onboarding Google incompleto
+- username non blindato
+- Google native config non chiusa del tutto
+- qualche residuo di codice morto e incoerenza stilistica
 
 ### Giudizio complessivo
-Il progetto ha una base concreta da MVP e una struttura già idonea a evolvere, ma non è ancora production-ready in senso pieno.  
-La parte più matura è il flusso auth/profilo; la parte meno matura è il dominio piante. La prossima evoluzione dovrebbe concentrarsi su:
-
-1. robustezza dati utente
-2. formalizzazione feature plants
-3. pulizia del presentation layer
-4. rafforzamento dei vincoli lato backend
+Il progetto è più maturo di quanto risultasse nella documentazione precedente: il layer auth/profilo è ormai una base concreta da MVP avanzato, con supporto Google e gestione Firestore reale. Non è ancora production-ready pieno, perché restano alcune criticità strutturali su configurazione Google, atomicità dello username, onboarding profilo e formalizzazione del dominio plants. Tuttavia la traiettoria tecnica è buona e la base architetturale è abbastanza sana da sostenere l’evoluzione successiva.
