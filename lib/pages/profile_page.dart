@@ -4,9 +4,33 @@ import 'package:plantly_app/blocs/auth/auth_bloc.dart';
 import 'package:plantly_app/cubits/profile/profile_cubit.dart';
 import 'package:plantly_app/cubits/sign_out/sign_out_cubit.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
+import 'package:plantly_app/features/user/user.dart';
 
-class ProfilePage extends StatelessWidget {
+import '../widgets/profile/info_card.dart';
+import '../widgets/profile/info_user_model.dart';
+import '../widgets/profile/logout_button.dart';
+import '../widgets/profile/section_label.dart';
+import '../widgets/profile/stat_card.dart';
+
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Safe: context is available in initState via the element, and
+    // ProfileCubit is provided above in the widget tree by main.dart.
+    final authState = context.read<AuthBloc>().state;
+    final uid = authState.user?.uid;
+    if (uid != null && uid.isNotEmpty) {
+      context.read<ProfileCubit>().watchProfile(uid);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,147 +42,144 @@ class ProfilePage extends StatelessWidget {
           );
         }
       },
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFEDE6D8),
-              Color(0xFFF7F4EE),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: BlocBuilder<AuthBloc, AuthBlocState>(
-            builder: (context, authState) {
-              final authUser = authState.user;
-              final isSigningOut =
-                  context.watch<SignOutCubit>().state is SignOutLoading;
+      child: BlocBuilder<AuthBloc, AuthBlocState>(
+        builder: (context, authState) {
+          final authUser = authState.user;
 
-              if (authUser == null) {
-                return const Center(child: CircularProgressIndicator());
-              }
+          if (authUser == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-              context.read<ProfileCubit>().watchProfile(authUser.uid);
+          return BlocBuilder<ProfileCubit, ProfileState>(
+            builder: (context, profileState) {
+              final profileUser =
+                  profileState is ProfileLoaded ? profileState.user : null;
 
-              return BlocBuilder<ProfileCubit, ProfileState>(
-                builder: (context, profileState) {
-                  final profileLoaded = profileState is ProfileLoaded;
-                  final profileUser =
-                      profileLoaded ? (profileState).user : null;
-                  final displayName = profileUser?.fullName.trim().isNotEmpty == true
-                      ? profileUser!.fullName
-                      : (authUser.displayName?.trim().isNotEmpty == true
-                          ? authUser.displayName!
-                          : 'Utente Plantly');
-                  final initials = _initials(displayName, authUser.email);
+              final displayName =
+                  _resolveDisplayName(profileUser, authUser.displayName);
+              final initials = _initials(displayName, authUser.email);
+              final email = profileUser?.email ?? authUser.email ?? '';
+              final handle =
+                  profileUser != null ? '@${profileUser.username}' : '';
+              final location = _resolveLocation(profileUser);
 
-                  return ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
-                    children: [
-                      Text(
-                        'Profilo',
-                        style: Theme.of(context).textTheme.displaySmall,
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.all(22),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.84),
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 24,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            CircleAvatar(
-                              radius: 34,
-                              backgroundColor:
-                                  LightTheme.primary.withOpacity(0.14),
-                              child: Text(
-                                initials,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
-                                    ?.copyWith(
-                                      color: LightTheme.deepForest,
-                                    ),
+              return CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  // ── Dark header ──────────────────────────────────────────
+                  SliverToBoxAdapter(
+                    child: _ProfileHeader(
+                      initials: initials,
+                      displayName: displayName,
+                      handle: handle,
+                      location: location,
+                      profileUser: profileUser,
+                    ),
+                  ),
+
+                  // ── Body ────────────────────────────────────────────────
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Personal info section
+                          const SectionLabel(label: 'Informazioni personali'),
+                          const SizedBox(height: 10),
+                          InfoCard(
+                            children: [
+                              InfoUser(
+                                icon: Icons.person_outline_rounded,
+                                label: 'Nome completo',
+                                value: displayName,
                               ),
-                            ),
-                            const SizedBox(height: 14),
-                            Text(
-                              displayName,
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              profileUser?.email ?? authUser.email ?? 'Nessuna email disponibile',
-                              style: Theme.of(context).textTheme.bodyLarge,
-                            ),
+                              InfoUser(
+                                icon: Icons.mail_outline_rounded,
+                                label: 'Email',
+                                value: email,
+                              ),
+                              if (profileUser != null && location.isNotEmpty)
+                                InfoUser(
+                                  icon: Icons.location_on_outlined,
+                                  label: 'Posizione',
+                                  value: location,
+                                ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Loading / failure states
+                          if (profileState is ProfileLoading) ...[
+                            const Center(child: CircularProgressIndicator()),
+                            const SizedBox(height: 24),
+                          ] else if (profileState is ProfileFailure) ...[
+                            const SectionLabel(label: 'Profilo'),
+                            const SizedBox(height: 10),
+                            InfoCard(children: [
+                              InfoUser(
+                                icon: Icons.warning_amber_rounded,
+                                label: 'Errore',
+                                value: profileState.message,
+                              ),
+                            ]),
+                            const SizedBox(height: 24),
                           ],
-                        ),
+
+                          // Logout button
+                          BlocBuilder<SignOutCubit, SignOutState>(
+                            builder: (context, signOutState) {
+                              final isSigningOut =
+                                  signOutState is SignOutLoading;
+                              return LogoutButton(
+                                loading: isSigningOut,
+                                onPressed: isSigningOut
+                                    ? null
+                                    : () =>
+                                        context.read<SignOutCubit>().signOut(),
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 18),
-                      if (profileState is ProfileLoading) ...[
-                        const _ProfileInfoTile(
-                          label: 'Profilo utente',
-                          value: 'Caricamento dati in corso...',
-                        ),
-                      ] else if (profileState is ProfileFailure) ...[
-                        _ProfileInfoTile(
-                          label: 'Profilo utente',
-                          value: profileState.message,
-                        ),
-                      ] else if (profileUser != null) ...[
-                        _ProfileInfoTile(
-                          label: 'Username',
-                          value: '@${profileUser.username}',
-                        ),
-                        _ProfileInfoTile(
-                          label: 'Località',
-                          value: '${profileUser.city}, ${profileUser.country}',
-                        ),
-                        const _ProfileInfoTile(
-                          label: 'Persistenza',
-                          value: 'Profilo sincronizzato su Firestore',
-                        ),
-                      ],
-                      const SizedBox(height: 18),
-                      ElevatedButton.icon(
-                        onPressed: isSigningOut
-                            ? null
-                            : () => context.read<SignOutCubit>().signOut(),
-                        icon: isSigningOut
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.logout_rounded),
-                        label: Text(isSigningOut ? 'Uscita in corso...' : 'Esci'),
-                      ),
-                    ],
-                  );
-                },
+                    ),
+                  ),
+                ],
               );
             },
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 
-  String _initials(String? displayName, String? email) {
-    final cleanedName = displayName?.trim() ?? '';
-    if (cleanedName.isNotEmpty) {
+  // ── Helpers ──────────────────────────────────────────────────────────────
+
+  String _resolveDisplayName(
+      PlantlyUser? profileUser, String? firebaseDisplayName) {
+    final fromProfile = profileUser?.fullName.trim();
+    if (fromProfile != null && fromProfile.isNotEmpty) return fromProfile;
+    final fromFirebase = firebaseDisplayName?.trim();
+    if (fromFirebase != null && fromFirebase.isNotEmpty) return fromFirebase;
+    return 'Utente Plantly';
+  }
+
+  String _resolveLocation(PlantlyUser? user) {
+    if (user == null) return '';
+    final city = user.city.trim();
+    final country = user.country.trim();
+    if (city.isNotEmpty && country.isNotEmpty) return '$city, $country';
+    if (city.isNotEmpty) return city;
+    if (country.isNotEmpty) return country;
+    return '';
+  }
+
+  String _initials(String displayName, String? email) {
+    final name = displayName.trim();
+    if (name.isNotEmpty) {
       final parts =
-          cleanedName.split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
+          name.split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
       if (parts.length == 1) {
         return parts.first.characters.take(1).toString().toUpperCase();
       }
@@ -166,33 +187,161 @@ class ProfilePage extends StatelessWidget {
               parts.last.characters.take(1).toString())
           .toUpperCase();
     }
-    final fallback = (email ?? 'P').trim();
-    return fallback.characters.take(1).toString().toUpperCase();
+    return (email ?? 'P').characters.take(1).toString().toUpperCase();
   }
 }
 
-class _ProfileInfoTile extends StatelessWidget {
-  const _ProfileInfoTile({required this.label, required this.value});
+// ── Header ────────────────────────────────────────────────────────────────
 
-  final String label;
-  final String value;
+class _ProfileHeader extends StatelessWidget {
+  const _ProfileHeader({
+    required this.initials,
+    required this.displayName,
+    required this.handle,
+    required this.location,
+    required this.profileUser,
+  });
+
+  final String initials;
+  final String displayName;
+  final String handle;
+  final String location;
+  final PlantlyUser? profileUser;
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.82),
-        borderRadius: BorderRadius.circular(22),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF1a5c3a), // green-mid
+            LightTheme.deepForest,
+          ],
+          stops: [0.0, 0.72],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 6),
-          Text(value, style: Theme.of(context).textTheme.titleMedium),
-        ],
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
+          child: Column(
+            children: [
+              // Avatar
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF2eb872),
+                          Color(0xFF0d6e3c),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.18),
+                        width: 3,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        initials,
+                        style: textTheme.headlineMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Edit badge
+                  Positioned(
+                    bottom: 2,
+                    right: 2,
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2eb872),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: LightTheme.deepForest,
+                          width: 2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.edit_rounded,
+                        size: 13,
+                        color: LightTheme.deepForest,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Full name
+              Text(
+                displayName,
+                style: textTheme.headlineMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 4),
+
+              // Handle + location
+              Text(
+                [
+                  if (handle.isNotEmpty) handle,
+                  if (location.isNotEmpty) location,
+                ].join(' · '),
+                style: textTheme.bodyMedium?.copyWith(
+                  color: Colors.white.withOpacity(0.55),
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              // Bio (if present)
+              if (profileUser?.bio != null && profileUser!.bio!.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(
+                  profileUser!.bio!,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: Colors.white.withOpacity(0.62),
+                    height: 1.55,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+
+              const SizedBox(height: 22),
+
+              // Stats card
+              const StatsCard(),
+            ],
+          ),
+        ),
       ),
     );
   }

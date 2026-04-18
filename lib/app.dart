@@ -1,9 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:plantly_app/cubits/forms/google_profile_completion_form_cubit.dart';
+import 'package:plantly_app/cubits/google_profile_completion/google_profile_completion_cubit.dart';
+import 'package:plantly_app/features/user/user.dart';
+import 'package:plantly_app/pages/google_profile_completion_page.dart';
 import 'package:plantly_app/pages/main_shell_page.dart';
 import 'package:plantly_app/pages/sign_in_page.dart';
 import 'package:plantly_app/pages/sign_up_page.dart';
 import 'package:plantly_app/pages/splash_screen.dart';
+import 'package:plantly_app/repositories/user_repository.dart';
 
 import 'blocs/auth/auth_bloc.dart';
 import 'core/routes.dart';
@@ -20,14 +26,41 @@ class App extends StatelessWidget {
 
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
-  // Naviga solo quando il Navigator è effettivamente pronto.
-  // Questo risolve il caso in cui AuthBloc emette uno stato prima che
-  // il Navigator sia montato (es. primo frame su cold start).
-  void _navigate(String route) {
+  // ── Navigation helpers ─────────────────────────────────────────────────
+
+  void _navigateReplace(String route) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _navigatorKey.currentState?.pushNamedAndRemoveUntil(
         route,
         (_) => false,
+      );
+    });
+  }
+
+  void _push(String route) {
+    _navigatorKey.currentState?.pushNamed(route);
+  }
+
+  void _pushReplacement(String route) {
+    _navigatorKey.currentState?.pushReplacementNamed(route);
+  }
+
+  void _navigateToProfileCompletion({
+    required BuildContext context,
+    required fb.User firebaseUser,
+    required PlantlyUser incompleteUser,
+  }) {
+    context.read<SignInCubit>().pendingProfileCompletion = false;
+    context.read<SignUpCubit>().pendingProfileCompletion = false;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        Routes.googleProfileCompletion,
+        (_) => false,
+        arguments: _ProfileCompletionArgs(
+          firebaseUser: firebaseUser,
+          incompleteUser: incompleteUser,
+        ),
       );
     });
   }
@@ -84,6 +117,37 @@ class App extends StatelessWidget {
                 builder: (_) => const MainShellPage(),
               );
 
+            case Routes.googleProfileCompletion:
+              final args = settings.arguments;
+              if (args is! _ProfileCompletionArgs) return null;
+
+              // Both cubits are scoped to this route only.
+              // GoogleProfileCompletionCubit handles Firestore persistence.
+              // GoogleProfileCompletionFormCubit handles form validation and
+              // delegates submit() to the completion cubit — the same pattern
+              // used by SignInFormCubit / SignUpFormCubit.
+              return MaterialPageRoute(
+                builder: (ctx) {
+                  final completionCubit = GoogleProfileCompletionCubit(
+                    userRepository: ctx.read<UserRepository>(),
+                    firebaseUser: args.firebaseUser,
+                    incompleteUser: args.incompleteUser,
+                  );
+                  return MultiBlocProvider(
+                    providers: [
+                      BlocProvider.value(value: completionCubit),
+                      BlocProvider(
+                        create: (_) => GoogleProfileCompletionFormCubit(
+                          completionCubit: completionCubit,
+                          initialUsername: args.incompleteUser.username,
+                        ),
+                      ),
+                    ],
+                    child: const GoogleProfileCompletionPage(),
+                  );
+                },
+              );
+
             default:
               return null;
           }
@@ -93,30 +157,52 @@ class App extends StatelessWidget {
           return MultiBlocListener(
             listeners: [
               BlocListener<AuthBloc, AuthBlocState>(
-                // listenWhen evita di reagire allo stato `unknown` iniziale
-                // e a re-emit dello stesso status (es. refresh token Firebase).
                 listenWhen: (previous, current) =>
                     previous.status != current.status &&
                     current.status != AuthStatus.unknown,
                 listener: (context, state) {
                   if (state.status == AuthStatus.authenticated) {
-                    _navigate(Routes.home);
+                    final signInPending =
+                        context.read<SignInCubit>().pendingProfileCompletion;
+                    final signUpPending =
+                        context.read<SignUpCubit>().pendingProfileCompletion;
+                    if (signInPending || signUpPending) return;
+                    _navigateReplace(Routes.home);
                   } else if (state.status == AuthStatus.unauthenticated) {
-                    _navigate(Routes.signIn);
+                    _navigateReplace(Routes.signIn);
+                  }
+                },
+              ),
+              BlocListener<SignInCubit, SignInState>(
+                listener: (context, state) {
+                  if (state is SignInNeedsProfileCompletion) {
+                    _navigateToProfileCompletion(
+                      context: context,
+                      firebaseUser: state.firebaseUser,
+                      incompleteUser: state.incompleteUser,
+                    );
+                  }
+                },
+              ),
+              BlocListener<SignUpCubit, SignUpState>(
+                listener: (context, state) {
+                  if (state is SignUpNeedsProfileCompletion) {
+                    _navigateToProfileCompletion(
+                      context: context,
+                      firebaseUser: state.firebaseUser,
+                      incompleteUser: state.incompleteUser,
+                    );
                   }
                 },
               ),
               BlocListener<AuthFlowCubit, AuthFlowState>(
                 listener: (context, state) {
                   if (state.destination == null) return;
-
                   if (state.destination == AuthFlowDestination.signUp) {
-                    _navigatorKey.currentState?.pushNamed(Routes.signUp);
+                    _push(Routes.signUp);
                   } else if (state.destination == AuthFlowDestination.signIn) {
-                    _navigatorKey.currentState
-                        ?.pushReplacementNamed(Routes.signIn);
+                    _pushReplacement(Routes.signIn);
                   }
-
                   context.read<AuthFlowCubit>().clear();
                 },
               ),
@@ -127,4 +213,14 @@ class App extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ProfileCompletionArgs {
+  const _ProfileCompletionArgs({
+    required this.firebaseUser,
+    required this.incompleteUser,
+  });
+
+  final fb.User firebaseUser;
+  final PlantlyUser incompleteUser;
 }

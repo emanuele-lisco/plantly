@@ -20,6 +20,24 @@ class SignUpSuccess extends SignUpState {
   List<Object?> get props => [success];
 }
 
+/// Emitted after a successful Google Sign-Up when the Firestore profile
+/// exists but is missing required fields (username, country, or city).
+///
+/// Mirrors [SignInNeedsProfileCompletion] so that [App] can handle both
+/// cases with the same navigation logic.
+class SignUpNeedsProfileCompletion extends SignUpState {
+  final fb.User firebaseUser;
+  final PlantlyUser incompleteUser;
+
+  const SignUpNeedsProfileCompletion({
+    required this.firebaseUser,
+    required this.incompleteUser,
+  });
+
+  @override
+  List<Object?> get props => [firebaseUser, incompleteUser];
+}
+
 class SignUpFailure extends SignUpState {
   final String error;
 

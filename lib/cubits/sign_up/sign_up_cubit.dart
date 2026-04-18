@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -19,6 +20,8 @@ class SignUpCubit extends Cubit<SignUpState> {
   })  : _authRepository = authRepository,
         _userRepository = userRepository,
         super(SignUpInitial());
+
+  // ── Classic sign-up ─────────────────────────────────────────────────────
 
   Future<void> signUp({
     required String username,
@@ -62,8 +65,13 @@ class SignUpCubit extends Cubit<SignUpState> {
       try {
         await _userRepository.createUserProfile(user);
       } catch (_) {
-        await authUser.delete();
-        rethrow;
+        try {
+          await authUser.delete();
+        } catch (_) {
+          // Auth account is orphaned — log in production.
+        }
+        emit(const SignUpFailure('Errore nel salvataggio del profilo. Riprova.'));
+        return;
       }
 
       emit(const SignUpSuccess('Registrazione completata con successo'));
@@ -76,19 +84,44 @@ class SignUpCubit extends Cubit<SignUpState> {
     }
   }
 
+  // ── Google sign-up ──────────────────────────────────────────────────────
+
+  /// Whether profile completion navigation is pending.
+  ///
+  /// Set to true before emitting [SignUpNeedsProfileCompletion] so that the
+  /// [AuthBloc] listener in [App] can detect this flag and skip its own
+  /// navigation to /home, avoiding a race condition.
+  bool pendingProfileCompletion = false;
+
   Future<void> signUpWithGoogle() async {
     emit(SignUpLoading());
 
     try {
       final result = await _authRepository.signInWithGoogle();
-      await _userRepository.ensureGoogleUserProfile(result.user);
-      emit(
-        SignUpSuccess(
-          result.isNewUser
-              ? 'Registrazione con Google completata con successo'
-              : 'Accesso con Google completato con successo',
-        ),
-      );
+
+      // Ensure a Firestore document exists. For new users this creates a
+      // partial document (country and city are empty strings). For existing
+      // users it returns the stored profile unchanged.
+      final user = await _userRepository.ensureGoogleUserProfile(result.user);
+
+      // Check whether required fields are filled.
+      if (_isProfileIncomplete(user)) {
+        // Set the flag BEFORE emitting the state so that the AuthBloc
+        // listener (which fires asynchronously) sees it as true and skips
+        // its own navigation to /home.
+        pendingProfileCompletion = true;
+        emit(SignUpNeedsProfileCompletion(
+          firebaseUser: result.user,
+          incompleteUser: user,
+        ));
+        return;
+      }
+
+      emit(SignUpSuccess(
+        result.isNewUser
+            ? 'Registrazione con Google completata con successo'
+            : 'Accesso con Google completato con successo',
+      ));
     } on GoogleSignInException catch (e) {
       emit(SignUpFailure(_mapGoogleError(e)));
     } on UserRepositoryException catch (e) {
@@ -98,6 +131,17 @@ class SignUpCubit extends Cubit<SignUpState> {
     } catch (_) {
       emit(const SignUpFailure('Errore durante la registrazione con Google'));
     }
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────
+
+  /// A profile is considered incomplete when any of the three fields that
+  /// Google cannot provide (username chosen by the user, country, city)
+  /// is blank.
+  bool _isProfileIncomplete(PlantlyUser user) {
+    return user.username.trim().isEmpty ||
+        user.country.trim().isEmpty ||
+        user.city.trim().isEmpty;
   }
 
   String _mapFirebaseError(FirebaseAuthException e) {
@@ -138,7 +182,7 @@ class SignUpCubit extends Cubit<SignUpState> {
       case GoogleSignInExceptionCode.uiUnavailable:
         return 'Interfaccia Google non disponibile in questo momento.';
       case GoogleSignInExceptionCode.userMismatch:
-        return 'L’account Google selezionato non è valido per questa sessione.';
+        return "L'account Google selezionato non è valido per questa sessione.";
       case GoogleSignInExceptionCode.unknownError:
         return e.description ?? 'Errore durante la registrazione con Google.';
       default:

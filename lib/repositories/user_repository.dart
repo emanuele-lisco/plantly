@@ -12,6 +12,8 @@ class UserRepository {
   CollectionReference<Map<String, dynamic>> get _usersCollection =>
       _firestore.collection('users');
 
+  // ── Read ────────────────────────────────────────────────────────────────
+
   Stream<PlantlyUser?> watchUser(String userId) {
     return _usersCollection.doc(userId).snapshots().map((snapshot) {
       if (!snapshot.exists) return null;
@@ -29,6 +31,8 @@ class UserRepository {
     return _fromFirestore(snapshot.id, data);
   }
 
+  // ── Username ────────────────────────────────────────────────────────────
+
   Future<bool> usernameExists(String username) async {
     final normalized = _normalizeUsername(username);
     if (normalized.isEmpty) return false;
@@ -40,6 +44,8 @@ class UserRepository {
 
     return result.docs.isNotEmpty;
   }
+
+  // ── Write ───────────────────────────────────────────────────────────────
 
   Future<void> createUserProfile(PlantlyUser user) async {
     final now = DateTime.now().toUtc();
@@ -74,6 +80,64 @@ class UserRepository {
     });
   }
 
+  // ── Google Sign-In profile bootstrap ───────────────────────────────────
+
+  /// Ensures a Firestore document exists for a Google-authenticated user.
+  ///
+  /// - If the document already exists it is returned as-is (even if
+  ///   incomplete — callers are responsible for checking completeness via
+  ///   [isProfileComplete]).
+  /// - If the document does not exist, a partial profile is created from
+  ///   whatever Firebase/Google provides (name, email, photo). Fields that
+  ///   Google cannot supply (country, city) are stored as empty strings.
+  ///   The username is auto-generated to be unique so the document is
+  ///   always insertable, but the caller should still route the user to
+  ///   profile completion because country and city will be blank.
+  Future<PlantlyUser> ensureGoogleUserProfile(fb.User firebaseUser) async {
+    final existingUser = await getUser(firebaseUser.uid);
+    if (existingUser != null) {
+      return existingUser;
+    }
+
+    final names = _splitDisplayName(firebaseUser.displayName);
+    final email = (firebaseUser.email ?? '').trim();
+
+    final generatedUsername = await _generateUniqueUsername(
+      email: email,
+      displayName: firebaseUser.displayName,
+    );
+
+    final user = PlantlyUser(
+      id: firebaseUser.uid,
+      username: generatedUsername,
+      name: names.$1,
+      surname: names.$2,
+      email: email,
+      country: '',
+      city: '',
+      imageUrl: firebaseUser.photoURL,
+    );
+
+    await createUserProfile(user);
+    return user;
+  }
+
+  // ── Profile completeness check ──────────────────────────────────────────
+
+  /// Returns true when all required user-facing fields are present and
+  /// non-empty.
+  ///
+  /// This is intentionally a pure helper method (no async, no Firestore
+  /// call) so it can be used cheaply by Cubits after they already have a
+  /// [PlantlyUser] in hand.
+  bool isProfileComplete(PlantlyUser user) {
+    return user.username.trim().isNotEmpty &&
+        user.country.trim().isNotEmpty &&
+        user.city.trim().isNotEmpty;
+  }
+
+  // ── Email resolution (username login) ──────────────────────────────────
+
   Future<String> resolveEmailFromIdentifier(String identifier) async {
     final cleaned = identifier.trim();
     if (cleaned.isEmpty) {
@@ -105,34 +169,7 @@ class UserRepository {
     return email;
   }
 
-  Future<PlantlyUser> ensureGoogleUserProfile(fb.User firebaseUser) async {
-    final existingUser = await getUser(firebaseUser.uid);
-    if (existingUser != null) {
-      return existingUser;
-    }
-
-    final names = _splitDisplayName(firebaseUser.displayName);
-    final email = (firebaseUser.email ?? '').trim();
-
-    final generatedUsername = await _generateUniqueUsername(
-      email: email,
-      displayName: firebaseUser.displayName,
-    );
-
-    final user = PlantlyUser(
-      id: firebaseUser.uid,
-      username: generatedUsername,
-      name: names.$1,
-      surname: names.$2,
-      email: email,
-      country: '',
-      city: '',
-      imageUrl: firebaseUser.photoURL,
-    );
-
-    await createUserProfile(user);
-    return user;
-  }
+  // ── Private helpers ─────────────────────────────────────────────────────
 
   Future<String> _generateUniqueUsername({
     required String email,
@@ -162,11 +199,14 @@ class UserRepository {
         .replaceAll(RegExp(r'[^a-z0-9._]'), '');
 
     if (fromDisplayName.isNotEmpty) {
-      return fromDisplayName.length >= 3 ? fromDisplayName : '${fromDisplayName}123';
+      return fromDisplayName.length >= 3
+          ? fromDisplayName
+          : '${fromDisplayName}123';
     }
 
     final localPart = email.split('@').first.trim().toLowerCase();
-    final normalizedLocalPart = localPart.replaceAll(RegExp(r'[^a-z0-9._]'), '');
+    final normalizedLocalPart =
+        localPart.replaceAll(RegExp(r'[^a-z0-9._]'), '');
 
     if (normalizedLocalPart.length >= 3) {
       return normalizedLocalPart;
@@ -185,7 +225,8 @@ class UserRepository {
     return (parts.first, parts.sublist(1).join(' '));
   }
 
-  String _normalizeUsername(String username) => username.trim().toLowerCase();
+  String _normalizeUsername(String username) =>
+      username.trim().toLowerCase();
 
   bool _looksLikeEmail(String value) {
     return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);

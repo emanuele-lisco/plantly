@@ -1,26 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:plantly_app/cubits/shell/shell_cubit.dart';
 import 'package:plantly_app/pages/garden_page.dart';
 import 'package:plantly_app/pages/plant_search_page.dart';
 import '../widgets/bottom_appbar/plantly_bottom_navigation.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
 
-class MainShellPage extends StatefulWidget {
+/// Main authenticated shell with bottom navigation.
+///
+/// Tab state is managed by [ShellCubit] instead of setState(), making it
+/// observable, testable, and ready to be driven externally (e.g. deep links).
+class MainShellPage extends StatelessWidget {
   const MainShellPage({super.key});
 
-  @override
-  State<MainShellPage> createState() => _MainShellPageState();
-}
-
-class _MainShellPageState extends State<MainShellPage> {
-  int _currentIndex = 0;
-
-  // Indici tab:
-  // 0 — Home
-  // 1 — Giardino
-  // 2 — Cerca (PlantSearchPage — placeholder per futura feature)
-  // 3 — Profilo
-  final List<Widget> _pages = const [
+  // Tab pages are constant — defined here so they are not recreated on
+  // every build() call.
+  static const List<Widget> _pages = [
     HomePage(),
     GardenPage(),
     PlantSearchPage(),
@@ -29,27 +25,29 @@ class _MainShellPageState extends State<MainShellPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 240),
-        child: IndexedStack(
-          key: ValueKey(_currentIndex),
-          index: _currentIndex,
-          children: _pages,
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: PlantlyBottomNav(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            if (_currentIndex == index) return;
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-        ),
+    return BlocProvider(
+      create: (_) => ShellCubit(),
+      child: BlocBuilder<ShellCubit, int>(
+        builder: (context, currentIndex) {
+          return Scaffold(
+            extendBody: true,
+            body: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 240),
+              child: IndexedStack(
+                key: ValueKey(currentIndex),
+                index: currentIndex,
+                children: _pages,
+              ),
+            ),
+            bottomNavigationBar: SafeArea(
+              top: false,
+              child: PlantlyBottomNav(
+                currentIndex: currentIndex,
+                onTap: context.read<ShellCubit>().selectTab,
+              ),
+            ),
+          );
+        },
       ),
     );
   }
