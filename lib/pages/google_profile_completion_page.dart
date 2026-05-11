@@ -4,16 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../core/routes.dart';
 import '../cubits/forms/google_profile_completion_form_cubit.dart';
 import '../cubits/google_profile_completion/google_profile_completion_cubit.dart';
+import '../widgets/feedback/snackbar_helper.dart';
 
-/// Shown when a Google-authenticated user has an incomplete Firestore
-/// profile (missing username, country, or city).
-///
-/// All form state (field values, errors, showErrors flag) is managed by
-/// [GoogleProfileCompletionFormCubit], following the same pattern used by
-/// [SignInPage] with [SignInFormCubit] and [SignUpPage] with [SignUpFormCubit].
-///
-/// This page contains no setState(), no TextEditingControllers, and no local
-/// validation logic — it is a pure StatelessWidget.
 class GoogleProfileCompletionPage extends StatelessWidget {
   const GoogleProfileCompletionPage({super.key});
 
@@ -21,27 +13,23 @@ class GoogleProfileCompletionPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        // Listen to the action cubit for navigation and error snackbars.
         child: BlocListener<GoogleProfileCompletionCubit,
             GoogleProfileCompletionState>(
           listener: (context, state) {
             if (state is GoogleProfileCompletionSuccess) {
+              SnackBarHelper.showSuccess(
+                context,
+                'Profilo completato con successo',
+              );
+
               Navigator.of(context).pushNamedAndRemoveUntil(
                 Routes.home,
-                (_) => false,
+                    (_) => false,
               );
             } else if (state is GoogleProfileCompletionFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.error),
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: Colors.redAccent,
-                ),
-              );
+              SnackBarHelper.showError(context, state.error);
             }
           },
-          // Build the UI from the action cubit state (for loading indicator)
-          // and the form cubit state (for field values and errors).
           child: BlocBuilder<GoogleProfileCompletionCubit,
               GoogleProfileCompletionState>(
             builder: (context, completionState) {
@@ -59,7 +47,6 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                     child: Column(
                       children: [
                         const SizedBox(height: 10),
-                        // ── Logo ──────────────────────────────────────────
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
@@ -85,21 +72,19 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                               .textTheme
                               .displaySmall
                               ?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.4,
-                              ),
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.4,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Completa il tuo profilo per continuare',
                           textAlign: TextAlign.center,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: Colors.black54,
-                                  ),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.black54,
+                          ),
                         ),
                         const SizedBox(height: 28),
-                        // ── Form card ─────────────────────────────────────
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
@@ -119,23 +104,15 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                           child: BlocBuilder<GoogleProfileCompletionFormCubit,
                               GoogleProfileCompletionFormState>(
                             builder: (context, formState) {
-                              final formCubit = context
-                                  .read<GoogleProfileCompletionFormCubit>();
+                              final formCubit =
+                              context.read<GoogleProfileCompletionFormCubit>();
 
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Username
-                                  TextField(
+                                  TextFormField(
                                     enabled: !loading,
-                                    controller: TextEditingController.fromValue(
-                                      TextEditingValue(
-                                        text: formState.username,
-                                        selection: TextSelection.collapsed(
-                                          offset: formState.username.length,
-                                        ),
-                                      ),
-                                    ),
+                                    initialValue: formState.username,
                                     keyboardType: TextInputType.text,
                                     textInputAction: TextInputAction.next,
                                     onChanged: formCubit.updateUsername,
@@ -143,16 +120,17 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                                       hintText: 'Username',
                                       label: const Text('Username'),
                                       prefixIcon: const Icon(
-                                          Icons.alternate_email_rounded),
+                                        Icons.alternate_email_rounded,
+                                      ),
                                       errorText: formState.showErrors
                                           ? formState.usernameError
                                           : null,
                                     ),
                                   ),
                                   const SizedBox(height: 17),
-                                  // Country
-                                  TextField(
+                                  TextFormField(
                                     enabled: !loading,
+                                    initialValue: formState.country,
                                     keyboardType: TextInputType.text,
                                     textInputAction: TextInputAction.next,
                                     onChanged: formCubit.updateCountry,
@@ -160,52 +138,53 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                                       hintText: 'Paese',
                                       label: const Text('Paese'),
                                       prefixIcon:
-                                          const Icon(Icons.flag_outlined),
+                                      const Icon(Icons.flag_outlined),
                                       errorText: formState.showErrors
                                           ? formState.countryError
                                           : null,
                                     ),
                                   ),
                                   const SizedBox(height: 17),
-                                  // City
-                                  TextField(
+                                  TextFormField(
                                     enabled: !loading,
+                                    initialValue: formState.city,
                                     keyboardType: TextInputType.text,
                                     textInputAction: TextInputAction.done,
-                                    onSubmitted: loading
+                                    onChanged: formCubit.updateCity,
+                                    onFieldSubmitted: loading
                                         ? null
                                         : (_) => formCubit.submit(),
-                                    onChanged: formCubit.updateCity,
                                     decoration: InputDecoration(
                                       hintText: 'Città',
                                       label: const Text('Città'),
                                       prefixIcon: const Icon(
-                                          Icons.location_city_outlined),
+                                        Icons.location_city_outlined,
+                                      ),
                                       errorText: formState.showErrors
                                           ? formState.cityError
                                           : null,
                                     ),
                                   ),
                                   const SizedBox(height: 30),
-                                  // Submit button
                                   SizedBox(
                                     width: double.infinity,
                                     child: loading
                                         ? const Center(
-                                            child: Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  vertical: 12),
-                                              child:
-                                                  CircularProgressIndicator(),
-                                            ),
-                                          )
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    )
                                         : ElevatedButton.icon(
-                                            onPressed: formCubit.submit,
-                                            icon: const Icon(Icons
-                                                .check_circle_outline_rounded),
-                                            label:
-                                                const Text('Salva e continua'),
-                                          ),
+                                      onPressed: formCubit.submit,
+                                      icon: const Icon(
+                                        Icons.check_circle_outline_rounded,
+                                      ),
+                                      label:
+                                      const Text('Salva e continua'),
+                                    ),
                                   ),
                                 ],
                               );

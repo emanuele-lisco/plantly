@@ -35,4 +35,6 @@ class Plant extends Equatable {
         nextAction,
         imageEmoji,
       ];
+
+  
 }

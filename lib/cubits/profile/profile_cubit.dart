@@ -18,35 +18,50 @@ class ProfileCubit extends Cubit<ProfileState> {
   String? _currentUserId;
 
   Future<void> watchProfile(String userId) async {
-    if (userId.trim().isEmpty) {
+    final trimmedUserId = userId.trim();
+
+    if (trimmedUserId.isEmpty) {
       emit(const ProfileFailure('Utente non disponibile'));
       return;
     }
 
-    if (_currentUserId == userId && _subscription != null) {
+    if (_currentUserId == trimmedUserId && _subscription != null) {
       return;
     }
 
-    _currentUserId = userId;
     emit(const ProfileLoading());
-    await _subscription?.cancel();
-    _subscription = _userRepository.watchUser(userId).listen(
-      (user) {
-        if (user == null) {
-          emit(const ProfileFailure('Profilo non trovato'));
-        } else {
-          emit(ProfileLoaded(user));
-        }
-      },
-      onError: (_) {
-        emit(const ProfileFailure('Errore nel caricamento del profilo'));
-      },
-    );
+
+    try {
+      await _subscription?.cancel();
+      _subscription = null;
+      _currentUserId = trimmedUserId;
+
+      _subscription = _userRepository.watchUser(trimmedUserId).listen(
+            (user) {
+          if (user == null) {
+            emit(const ProfileFailure('Profilo non trovato'));
+          } else {
+            emit(ProfileLoaded(user));
+          }
+        },
+        onError: (_, __) {
+          emit(const ProfileFailure('Errore nel caricamento del profilo'));
+        },
+      );
+    } on UserRepositoryException catch (e) {
+      emit(ProfileFailure(e.message));
+    } catch (_) {
+      emit(const ProfileFailure('Errore nel caricamento del profilo'));
+    }
   }
 
   @override
   Future<void> close() async {
-    await _subscription?.cancel();
+    try {
+      await _subscription?.cancel();
+    } catch (_) {
+      // Nessun rilancio in chiusura cubit.
+    }
     return super.close();
   }
 }

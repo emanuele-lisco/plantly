@@ -6,8 +6,8 @@ import 'package:plantly_app/cubits/google_profile_completion/google_profile_comp
 import 'package:plantly_app/features/user/user.dart';
 import 'package:plantly_app/pages/google_profile_completion_page.dart';
 import 'package:plantly_app/pages/main_shell_page.dart';
-import 'package:plantly_app/pages/sign_in_page.dart';
-import 'package:plantly_app/pages/sign_up_page.dart';
+import 'package:plantly_app/pages/sign_pages/sign_in_page.dart';
+import 'package:plantly_app/pages/sign_pages/sign_up_page.dart';
 import 'package:plantly_app/pages/splash_screen.dart';
 import 'package:plantly_app/repositories/user_repository.dart';
 
@@ -26,13 +26,12 @@ class App extends StatelessWidget {
 
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
-  // ── Navigation helpers ─────────────────────────────────────────────────
-
-  void _navigateReplace(String route) {
+  void _navigateReplace(String route, {Object? arguments}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _navigatorKey.currentState?.pushNamedAndRemoveUntil(
         route,
-        (_) => false,
+            (_) => false,
+        arguments: arguments,
       );
     });
   }
@@ -45,24 +44,88 @@ class App extends StatelessWidget {
     _navigatorKey.currentState?.pushReplacementNamed(route);
   }
 
-  void _navigateToProfileCompletion({
-    required BuildContext context,
-    required fb.User firebaseUser,
-    required PlantlyUser incompleteUser,
-  }) {
-    context.read<SignInCubit>().pendingProfileCompletion = false;
-    context.read<SignUpCubit>().pendingProfileCompletion = false;
+  bool _isProfileComplete(PlantlyUser? user) {
+    if (user == null) return false;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _navigatorKey.currentState?.pushNamedAndRemoveUntil(
+    final username = user.username.trim();
+    final country = user.country.trim();
+    final city = user.city.trim();
+
+    return username.isNotEmpty && country.isNotEmpty && city.isNotEmpty;
+  }
+
+  Future<void> _handleAuthenticatedUser(
+      BuildContext context,
+      fb.User firebaseUser,
+      ) async {
+    final userRepository = context.read<UserRepository>();
+
+    try {
+      final profile = await userRepository.getUser(firebaseUser.uid);
+
+      if (_isProfileComplete(profile)) {
+        _navigateReplace(Routes.home);
+        return;
+      }
+
+      final incompleteUser =
+          profile ??
+              PlantlyUser(
+                id: firebaseUser.uid,
+                username: '',
+                name: firebaseUser.displayName?.trim() ?? '',
+                surname: '',
+                email: firebaseUser.email?.trim() ?? '',
+                country: '',
+                city: '',
+                imageUrl: firebaseUser.photoURL,
+                bio: null,
+                createdAt: DateTime.now().toUtc(),
+                updatedAt: DateTime.now().toUtc(),
+              );
+
+      _navigateReplace(
         Routes.googleProfileCompletion,
-        (_) => false,
         arguments: _ProfileCompletionArgs(
           firebaseUser: firebaseUser,
           incompleteUser: incompleteUser,
         ),
       );
-    });
+    } catch (_) {
+      final fallbackUser = PlantlyUser(
+        id: firebaseUser.uid,
+        username: '',
+        name: firebaseUser.displayName?.trim() ?? '',
+        surname: '',
+        email: firebaseUser.email?.trim() ?? '',
+        country: '',
+        city: '',
+        imageUrl: firebaseUser.photoURL,
+        bio: null,
+        createdAt: DateTime.now().toUtc(),
+        updatedAt: DateTime.now().toUtc(),
+      );
+
+      _navigateReplace(
+        Routes.googleProfileCompletion,
+        arguments: _ProfileCompletionArgs(
+          firebaseUser: firebaseUser,
+          incompleteUser: fallbackUser,
+        ),
+      );
+    }
+  }
+
+  Route<dynamic> _buildFallbackRoute(RouteSettings settings) {
+    return MaterialPageRoute(
+      builder: (_) => Scaffold(
+        body: Center(
+          child: Text(
+            'Route non trovata: ${settings.name ?? 'sconosciuta'}',
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -119,13 +182,10 @@ class App extends StatelessWidget {
 
             case Routes.googleProfileCompletion:
               final args = settings.arguments;
-              if (args is! _ProfileCompletionArgs) return null;
+              if (args is! _ProfileCompletionArgs) {
+                return _buildFallbackRoute(settings);
+              }
 
-              // Both cubits are scoped to this route only.
-              // GoogleProfileCompletionCubit handles Firestore persistence.
-              // GoogleProfileCompletionFormCubit handles form validation and
-              // delegates submit() to the completion cubit — the same pattern
-              // used by SignInFormCubit / SignUpFormCubit.
               return MaterialPageRoute(
                 builder: (ctx) {
                   final completionCubit = GoogleProfileCompletionCubit(
@@ -133,6 +193,7 @@ class App extends StatelessWidget {
                     firebaseUser: args.firebaseUser,
                     incompleteUser: args.incompleteUser,
                   );
+
                   return MultiBlocProvider(
                     providers: [
                       BlocProvider.value(value: completionCubit),
@@ -149,60 +210,36 @@ class App extends StatelessWidget {
               );
 
             default:
-              return null;
+              return _buildFallbackRoute(settings);
           }
         },
-
         builder: (context, child) {
           return MultiBlocListener(
             listeners: [
               BlocListener<AuthBloc, AuthBlocState>(
                 listenWhen: (previous, current) =>
-                    previous.status != current.status &&
+                previous.status != current.status &&
                     current.status != AuthStatus.unknown,
                 listener: (context, state) {
-                  if (state.status == AuthStatus.authenticated) {
-                    final signInPending =
-                        context.read<SignInCubit>().pendingProfileCompletion;
-                    final signUpPending =
-                        context.read<SignUpCubit>().pendingProfileCompletion;
-                    if (signInPending || signUpPending) return;
-                    _navigateReplace(Routes.home);
+                  if (state.status == AuthStatus.authenticated &&
+                      state.user != null) {
+                    _handleAuthenticatedUser(context, state.user!);
                   } else if (state.status == AuthStatus.unauthenticated) {
                     _navigateReplace(Routes.signIn);
-                  }
-                },
-              ),
-              BlocListener<SignInCubit, SignInState>(
-                listener: (context, state) {
-                  if (state is SignInNeedsProfileCompletion) {
-                    _navigateToProfileCompletion(
-                      context: context,
-                      firebaseUser: state.firebaseUser,
-                      incompleteUser: state.incompleteUser,
-                    );
-                  }
-                },
-              ),
-              BlocListener<SignUpCubit, SignUpState>(
-                listener: (context, state) {
-                  if (state is SignUpNeedsProfileCompletion) {
-                    _navigateToProfileCompletion(
-                      context: context,
-                      firebaseUser: state.firebaseUser,
-                      incompleteUser: state.incompleteUser,
-                    );
                   }
                 },
               ),
               BlocListener<AuthFlowCubit, AuthFlowState>(
                 listener: (context, state) {
                   if (state.destination == null) return;
+
                   if (state.destination == AuthFlowDestination.signUp) {
                     _push(Routes.signUp);
-                  } else if (state.destination == AuthFlowDestination.signIn) {
+                  } else if (state.destination ==
+                      AuthFlowDestination.signIn) {
                     _pushReplacement(Routes.signIn);
                   }
+
                   context.read<AuthFlowCubit>().clear();
                 },
               ),

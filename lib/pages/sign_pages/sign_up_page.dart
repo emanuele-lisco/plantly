@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../cubits/custom/obscure/obscure_cubit.dart';
-import '../cubits/forms/sign_up_form_cubit.dart';
-import '../cubits/navigation/auth_flow_cubit.dart';
-import '../cubits/sign_up/sign_up_cubit.dart';
-import '../widgets/auth/google_auth_button.dart';
-import '../widgets/sign_up/password_strength.dart';
+import '../../cubits/custom/obscure/obscure_cubit.dart';
+import '../../cubits/forms/sign_up_form_cubit.dart';
+import '../../cubits/navigation/auth_flow_cubit.dart';
+import '../../cubits/sign_up/sign_up_cubit.dart';
+import '../../widgets/auth/google_auth_button.dart';
+import '../../widgets/feedback/snackbar_helper.dart';
+import '../../widgets/sign_up/password_strength.dart';
 
 class SignUpPage extends StatelessWidget {
   const SignUpPage({super.key});
@@ -18,13 +19,9 @@ class SignUpPage extends StatelessWidget {
         child: BlocListener<SignUpCubit, SignUpState>(
           listener: (context, state) {
             if (state is SignUpFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.error),
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: Colors.redAccent,
-                ),
-              );
+              SnackBarHelper.showError(context, state.message);
+            } else if (state is SignUpSuccess) {
+              SnackBarHelper.showSuccess(context, state.message);
             }
           },
           child: BlocBuilder<SignUpCubit, SignUpState>(
@@ -70,9 +67,9 @@ class SignUpPage extends StatelessWidget {
                                   .textTheme
                                   .displaySmall
                                   ?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.4,
-                                  ),
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.4,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -82,8 +79,8 @@ class SignUpPage extends StatelessWidget {
                                   .textTheme
                                   .titleMedium
                                   ?.copyWith(
-                                    color: Colors.black54,
-                                  ),
+                                color: Colors.black54,
+                              ),
                             ),
                             const SizedBox(height: 28),
                             Container(
@@ -112,7 +109,9 @@ class SignUpPage extends StatelessWidget {
                                     decoration: InputDecoration(
                                       hintText: 'Username',
                                       label: const Text('Username'),
-                                      prefixIcon: const Icon(Icons.alternate_email_rounded),
+                                      prefixIcon: const Icon(
+                                        Icons.alternate_email_rounded,
+                                      ),
                                       errorText: formState.showErrors
                                           ? formState.usernameError
                                           : null,
@@ -171,7 +170,7 @@ class SignUpPage extends StatelessWidget {
                                       hintText: 'Email',
                                       label: const Text('Email'),
                                       prefixIcon:
-                                          const Icon(Icons.email_outlined),
+                                      const Icon(Icons.email_outlined),
                                       errorText: formState.showErrors
                                           ? formState.emailError
                                           : null,
@@ -189,7 +188,9 @@ class SignUpPage extends StatelessWidget {
                                           decoration: InputDecoration(
                                             hintText: 'Paese',
                                             label: const Text('Paese'),
-                                            prefixIcon: const Icon(Icons.public_rounded),
+                                            prefixIcon: const Icon(
+                                              Icons.public_rounded,
+                                            ),
                                             errorText: formState.showErrors
                                                 ? formState.countryError
                                                 : null,
@@ -206,7 +207,9 @@ class SignUpPage extends StatelessWidget {
                                           decoration: InputDecoration(
                                             hintText: 'Città',
                                             label: const Text('Città'),
-                                            prefixIcon: const Icon(Icons.location_city_outlined),
+                                            prefixIcon: const Icon(
+                                              Icons.location_city_outlined,
+                                            ),
                                             errorText: formState.showErrors
                                                 ? formState.cityError
                                                 : null,
@@ -228,7 +231,7 @@ class SignUpPage extends StatelessWidget {
                                           hintText: 'Password',
                                           label: const Text('Password'),
                                           prefixIcon:
-                                              const Icon(Icons.lock_outline),
+                                          const Icon(Icons.lock_outline),
                                           suffixIcon: IconButton(
                                             onPressed: () => context
                                                 .read<ObscureCubit>()
@@ -253,15 +256,18 @@ class SignUpPage extends StatelessWidget {
                                     builder: (context, obscureState) {
                                       return TextField(
                                         enabled: !loading,
-                                        obscureText: obscureState.confirmPassword,
+                                        obscureText:
+                                        obscureState.confirmPassword,
                                         onChanged: context
                                             .read<SignUpFormCubit>()
                                             .updateConfirmPassword,
                                         decoration: InputDecoration(
                                           hintText: 'Conferma Password',
-                                          label: const Text('Conferma Password'),
+                                          label: const Text(
+                                            'Conferma Password',
+                                          ),
                                           prefixIcon:
-                                              const Icon(Icons.lock_outline),
+                                          const Icon(Icons.lock_outline),
                                           suffixIcon: IconButton(
                                             onPressed: () => context
                                                 .read<ObscureCubit>()
@@ -290,22 +296,23 @@ class SignUpPage extends StatelessWidget {
                                     width: double.infinity,
                                     child: loading
                                         ? const Center(
-                                            child: Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                vertical: 12,
-                                              ),
-                                              child: CircularProgressIndicator(),
-                                            ),
-                                          )
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    )
                                         : ElevatedButton.icon(
-                                            onPressed: () => context
-                                                .read<SignUpFormCubit>()
-                                                .submit(),
-                                            icon: const Icon(
-                                              Icons.spa_rounded,
-                                            ),
-                                            label: const Text('Crea account'),
-                                          ),
+                                      onPressed: () => context
+                                          .read<SignUpFormCubit>()
+                                          .submit(),
+                                      icon: const Icon(
+                                        Icons.spa_rounded,
+                                      ),
+                                      label:
+                                      const Text('Crea account'),
+                                    ),
                                   ),
                                   const SizedBox(height: 14),
                                   GoogleAuthButton(
@@ -313,7 +320,9 @@ class SignUpPage extends StatelessWidget {
                                     enabled: !loading,
                                     onPressed: loading
                                         ? null
-                                        : () => context.read<SignUpCubit>().signUpWithGoogle(),
+                                        : () => context
+                                        .read<SignUpCubit>()
+                                        .signUpWithGoogle(),
                                   ),
                                   const SizedBox(height: 14),
                                   SizedBox(
@@ -322,8 +331,8 @@ class SignUpPage extends StatelessWidget {
                                       onPressed: loading
                                           ? null
                                           : () => context
-                                              .read<AuthFlowCubit>()
-                                              .goToSignIn(),
+                                          .read<AuthFlowCubit>()
+                                          .goToSignIn(),
                                       icon: const Icon(
                                         Icons.arrow_back_rounded,
                                         size: 18,

@@ -1,48 +1,30 @@
 part of 'sign_up_cubit.dart';
 
-abstract class SignUpState extends Equatable {
+sealed class SignUpState extends Equatable {
   const SignUpState();
 
   @override
   List<Object?> get props => [];
 }
 
-class SignUpInitial extends SignUpState {}
+final class SignUpInitial extends SignUpState {}
 
-class SignUpLoading extends SignUpState {}
+final class SignUpLoading extends SignUpState {}
 
-class SignUpSuccess extends SignUpState {
-  final String success;
+final class SignUpSuccess extends SignUpState {
+  final String message;
 
-  const SignUpSuccess(this.success);
+  const SignUpSuccess(this.message);
 
   @override
-  List<Object?> get props => [success];
+  List<Object?> get props => [message];
 }
 
-/// Emitted after a successful Google Sign-Up when the Firestore profile
-/// exists but is missing required fields (username, country, or city).
-///
-/// Mirrors [SignInNeedsProfileCompletion] so that [App] can handle both
-/// cases with the same navigation logic.
-class SignUpNeedsProfileCompletion extends SignUpState {
-  final fb.User firebaseUser;
-  final PlantlyUser incompleteUser;
+final class SignUpFailure extends SignUpState {
+  final String message;
 
-  const SignUpNeedsProfileCompletion({
-    required this.firebaseUser,
-    required this.incompleteUser,
-  });
+  const SignUpFailure(this.message);
 
   @override
-  List<Object?> get props => [firebaseUser, incompleteUser];
-}
-
-class SignUpFailure extends SignUpState {
-  final String error;
-
-  const SignUpFailure(this.error);
-
-  @override
-  List<Object?> get props => [error];
+  List<Object?> get props => [message];
 }

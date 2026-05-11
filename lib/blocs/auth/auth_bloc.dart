@@ -18,18 +18,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthBlocState> {
         super(const AuthBlocState.unknown()) {
     on<AuthUserChanged>(_onAuthUserChanged);
 
-    // Firebase emette subito il valore corrente al momento della sottoscrizione,
-    // quindi non serve nessun evento "check" manuale: questo stream gestisce
-    // sia il cold start che i cambi successivi (login/logout).
     _authSubscription = _authRepository.authStateChanges.listen(
-      (user) => add(AuthUserChanged(user)),
+          (user) => add(AuthUserChanged(user)),
+      onError: (Object error, StackTrace stackTrace) {
+        add(const AuthUserChanged(null));
+      },
     );
   }
 
   void _onAuthUserChanged(
-    AuthUserChanged event,
-    Emitter<AuthBlocState> emit,
-  ) {
+      AuthUserChanged event,
+      Emitter<AuthBlocState> emit,
+      ) {
     final user = event.user;
     if (user != null) {
       emit(AuthBlocState.authenticated(user));

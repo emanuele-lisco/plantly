@@ -6,6 +6,7 @@ import 'package:plantly_app/cubits/sign_out/sign_out_cubit.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 import 'package:plantly_app/features/user/user.dart';
 
+import '../widgets/feedback/snackbar_helper.dart';
 import '../widgets/profile/info_card.dart';
 import '../widgets/profile/info_user_model.dart';
 import '../widgets/profile/logout_button.dart';
@@ -23,8 +24,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    // Safe: context is available in initState via the element, and
-    // ProfileCubit is provided above in the widget tree by main.dart.
     final authState = context.read<AuthBloc>().state;
     final uid = authState.user?.uid;
     if (uid != null && uid.isNotEmpty) {
@@ -37,9 +36,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return BlocListener<SignOutCubit, SignOutState>(
       listener: (context, state) {
         if (state is SignOutFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
+          SnackBarHelper.showError(context, state.message);
         }
       },
       child: BlocBuilder<AuthBloc, AuthBlocState>(
@@ -53,20 +50,20 @@ class _ProfilePageState extends State<ProfilePage> {
           return BlocBuilder<ProfileCubit, ProfileState>(
             builder: (context, profileState) {
               final profileUser =
-                  profileState is ProfileLoaded ? profileState.user : null;
+              profileState is ProfileLoaded ? profileState.user : null;
 
               final displayName =
-                  _resolveDisplayName(profileUser, authUser.displayName);
+              _resolveDisplayName(profileUser, authUser.displayName);
               final initials = _initials(displayName, authUser.email);
               final email = profileUser?.email ?? authUser.email ?? '';
               final handle =
-                  profileUser != null ? '@${profileUser.username}' : '';
+              profileUser != null ? '@${profileUser.username}' : '';
               final location = _resolveLocation(profileUser);
+              final imageUrl = profileUser?.imageUrl;
 
               return CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
-                  // ── Dark header ──────────────────────────────────────────
                   SliverToBoxAdapter(
                     child: _ProfileHeader(
                       initials: initials,
@@ -74,17 +71,15 @@ class _ProfilePageState extends State<ProfilePage> {
                       handle: handle,
                       location: location,
                       profileUser: profileUser,
+                      imageUrl: imageUrl,
                     ),
                   ),
-
-                  // ── Body ────────────────────────────────────────────────
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Personal info section
                           const SectionLabel(label: 'Informazioni personali'),
                           const SizedBox(height: 10),
                           InfoCard(
@@ -107,37 +102,34 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                             ],
                           ),
-
                           const SizedBox(height: 24),
-
-                          // Loading / failure states
                           if (profileState is ProfileLoading) ...[
                             const Center(child: CircularProgressIndicator()),
                             const SizedBox(height: 24),
                           ] else if (profileState is ProfileFailure) ...[
                             const SectionLabel(label: 'Profilo'),
                             const SizedBox(height: 10),
-                            InfoCard(children: [
-                              InfoUser(
-                                icon: Icons.warning_amber_rounded,
-                                label: 'Errore',
-                                value: profileState.message,
-                              ),
-                            ]),
+                            InfoCard(
+                              children: [
+                                InfoUser(
+                                  icon: Icons.warning_amber_rounded,
+                                  label: 'Errore',
+                                  value: profileState.message,
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: 24),
                           ],
-
-                          // Logout button
                           BlocBuilder<SignOutCubit, SignOutState>(
                             builder: (context, signOutState) {
                               final isSigningOut =
-                                  signOutState is SignOutLoading;
+                              signOutState is SignOutLoading;
                               return LogoutButton(
                                 loading: isSigningOut,
                                 onPressed: isSigningOut
                                     ? null
                                     : () =>
-                                        context.read<SignOutCubit>().signOut(),
+                                    context.read<SignOutCubit>().signOut(),
                               );
                             },
                           ),
@@ -154,14 +146,16 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
-
   String _resolveDisplayName(
-      PlantlyUser? profileUser, String? firebaseDisplayName) {
+      PlantlyUser? profileUser,
+      String? firebaseDisplayName,
+      ) {
     final fromProfile = profileUser?.fullName.trim();
     if (fromProfile != null && fromProfile.isNotEmpty) return fromProfile;
+
     final fromFirebase = firebaseDisplayName?.trim();
     if (fromFirebase != null && fromFirebase.isNotEmpty) return fromFirebase;
+
     return 'Utente Plantly';
   }
 
@@ -179,19 +173,17 @@ class _ProfilePageState extends State<ProfilePage> {
     final name = displayName.trim();
     if (name.isNotEmpty) {
       final parts =
-          name.split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
+      name.split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
       if (parts.length == 1) {
         return parts.first.characters.take(1).toString().toUpperCase();
       }
       return (parts.first.characters.take(1).toString() +
-              parts.last.characters.take(1).toString())
+          parts.last.characters.take(1).toString())
           .toUpperCase();
     }
     return (email ?? 'P').characters.take(1).toString().toUpperCase();
   }
 }
-
-// ── Header ────────────────────────────────────────────────────────────────
 
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
@@ -200,6 +192,7 @@ class _ProfileHeader extends StatelessWidget {
     required this.handle,
     required this.location,
     required this.profileUser,
+    this.imageUrl,
   });
 
   final String initials;
@@ -207,6 +200,7 @@ class _ProfileHeader extends StatelessWidget {
   final String handle;
   final String location;
   final PlantlyUser? profileUser;
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -218,7 +212,7 @@ class _ProfileHeader extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFF1a5c3a), // green-mid
+            Color(0xFF1a5c3a),
             LightTheme.deepForest,
           ],
           stops: [0.0, 0.72],
@@ -230,7 +224,6 @@ class _ProfileHeader extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
           child: Column(
             children: [
-              // Avatar
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -260,7 +253,15 @@ class _ProfileHeader extends StatelessWidget {
                       ],
                     ),
                     child: Center(
-                      child: Text(
+                      child: imageUrl != null
+                          ? CircleAvatar(
+                        radius: 50,
+                        backgroundImage: NetworkImage(
+                          imageUrl ?? 'https://via.placeholder.com/150',
+                        ),
+                        backgroundColor: Colors.transparent,
+                      )
+                          : Text(
                         initials,
                         style: textTheme.headlineMedium?.copyWith(
                           color: Colors.white,
@@ -269,7 +270,6 @@ class _ProfileHeader extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Edit badge
                   Positioned(
                     bottom: 2,
                     right: 2,
@@ -293,10 +293,7 @@ class _ProfileHeader extends StatelessWidget {
                   ),
                 ],
               ),
-
               const SizedBox(height: 16),
-
-              // Full name
               Text(
                 displayName,
                 style: textTheme.headlineMedium?.copyWith(
@@ -305,10 +302,7 @@ class _ProfileHeader extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-
               const SizedBox(height: 4),
-
-              // Handle + location
               Text(
                 [
                   if (handle.isNotEmpty) handle,
@@ -319,8 +313,6 @@ class _ProfileHeader extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-
-              // Bio (if present)
               if (profileUser?.bio != null && profileUser!.bio!.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(
@@ -334,10 +326,7 @@ class _ProfileHeader extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-
               const SizedBox(height: 22),
-
-              // Stats card
               const StatsCard(),
             ],
           ),

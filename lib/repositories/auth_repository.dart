@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -70,6 +68,7 @@ class AuthRepository {
       final provider = fb.GoogleAuthProvider();
       final credential = await _firebaseAuth.signInWithPopup(provider);
       final user = credential.user;
+
       if (user == null) {
         throw Exception('Utente non disponibile dopo l’accesso con Google.');
       }
@@ -91,6 +90,7 @@ class AuthRepository {
 
     final credential = await _firebaseAuth.signInWithCredential(authCredential);
     final user = credential.user;
+
     if (user == null) {
       throw Exception('Utente non disponibile dopo l’accesso con Google.');
     }
@@ -109,31 +109,16 @@ class AuthRepository {
   }
 
   Future<void> _initializeGoogleSignIn() {
-    _googleInitialization ??= _googleSignIn.initialize(
-      serverClientId: _serverClientIdForCurrentPlatform(),
-    );
+    _googleInitialization ??= _googleSignIn.initialize();
     return _googleInitialization!;
-  }
-
-  String? _serverClientIdForCurrentPlatform() {
-    if (kIsWeb) return null;
-
-    if (Platform.isAndroid) {
-      return null;
-    }
-
-    if (Platform.isIOS || Platform.isMacOS) {
-      return null;
-    }
-
-    return null;
   }
 
   Future<void> _signOutFromGoogleSafely() async {
     try {
       await _googleSignIn.signOut();
-    } catch (_) {
-      // Non bloccare il logout Firebase se il sign out Google fallisce.
+    } catch (e, stackTrace) {
+      debugPrint('Errore durante Google sign out: $e');
+      debugPrintStack(stackTrace: stackTrace);
     }
   }
 }

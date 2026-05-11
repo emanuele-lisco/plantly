@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -21,8 +20,6 @@ class SignUpCubit extends Cubit<SignUpState> {
         _userRepository = userRepository,
         super(SignUpInitial());
 
-  // ── Classic sign-up ─────────────────────────────────────────────────────
-
   Future<void> signUp({
     required String username,
     required String nome,
@@ -35,13 +32,6 @@ class SignUpCubit extends Cubit<SignUpState> {
     emit(SignUpLoading());
 
     try {
-      final usernameAlreadyExists =
-          await _userRepository.usernameExists(username);
-      if (usernameAlreadyExists) {
-        emit(const SignUpFailure('Username già in uso'));
-        return;
-      }
-
       final displayName = [nome.trim(), cognome.trim()]
           .where((part) => part.isNotEmpty)
           .join(' ');
@@ -68,10 +58,9 @@ class SignUpCubit extends Cubit<SignUpState> {
         try {
           await authUser.delete();
         } catch (_) {
-          // Auth account is orphaned — log in production.
+          // Da sostituire con logging strutturato in produzione.
         }
-        emit(const SignUpFailure('Errore nel salvataggio del profilo. Riprova.'));
-        return;
+        rethrow;
       }
 
       emit(const SignUpSuccess('Registrazione completata con successo'));
@@ -84,44 +73,15 @@ class SignUpCubit extends Cubit<SignUpState> {
     }
   }
 
-  // ── Google sign-up ──────────────────────────────────────────────────────
-
-  /// Whether profile completion navigation is pending.
-  ///
-  /// Set to true before emitting [SignUpNeedsProfileCompletion] so that the
-  /// [AuthBloc] listener in [App] can detect this flag and skip its own
-  /// navigation to /home, avoiding a race condition.
-  bool pendingProfileCompletion = false;
-
   Future<void> signUpWithGoogle() async {
     emit(SignUpLoading());
 
     try {
       final result = await _authRepository.signInWithGoogle();
 
-      // Ensure a Firestore document exists. For new users this creates a
-      // partial document (country and city are empty strings). For existing
-      // users it returns the stored profile unchanged.
-      final user = await _userRepository.ensureGoogleUserProfile(result.user);
+      await _userRepository.ensureGoogleUserProfile(result.user);
 
-      // Check whether required fields are filled.
-      if (_isProfileIncomplete(user)) {
-        // Set the flag BEFORE emitting the state so that the AuthBloc
-        // listener (which fires asynchronously) sees it as true and skips
-        // its own navigation to /home.
-        pendingProfileCompletion = true;
-        emit(SignUpNeedsProfileCompletion(
-          firebaseUser: result.user,
-          incompleteUser: user,
-        ));
-        return;
-      }
-
-      emit(SignUpSuccess(
-        result.isNewUser
-            ? 'Registrazione con Google completata con successo'
-            : 'Accesso con Google completato con successo',
-      ));
+      emit(const SignUpSuccess('Accesso con Google completato'));
     } on GoogleSignInException catch (e) {
       emit(SignUpFailure(_mapGoogleError(e)));
     } on UserRepositoryException catch (e) {
@@ -131,17 +91,6 @@ class SignUpCubit extends Cubit<SignUpState> {
     } catch (_) {
       emit(const SignUpFailure('Errore durante la registrazione con Google'));
     }
-  }
-
-  // ── Helpers ─────────────────────────────────────────────────────────────
-
-  /// A profile is considered incomplete when any of the three fields that
-  /// Google cannot provide (username chosen by the user, country, city)
-  /// is blank.
-  bool _isProfileIncomplete(PlantlyUser user) {
-    return user.username.trim().isEmpty ||
-        user.country.trim().isEmpty ||
-        user.city.trim().isEmpty;
   }
 
   String _mapFirebaseError(FirebaseAuthException e) {

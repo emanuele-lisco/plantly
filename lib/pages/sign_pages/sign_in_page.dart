@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../cubits/custom/obscure/obscure_cubit.dart';
-import '../cubits/forms/sign_in_form_cubit.dart';
-import '../cubits/navigation/auth_flow_cubit.dart';
-import '../cubits/sign_in/sign_in_cubit.dart';
-import '../widgets/auth/google_auth_button.dart';
+import '../../cubits/custom/obscure/obscure_cubit.dart';
+import '../../cubits/forms/sign_in_form_cubit.dart';
+import '../../cubits/navigation/auth_flow_cubit.dart';
+import '../../cubits/sign_in/sign_in_cubit.dart';
+import '../../widgets/auth/google_auth_button.dart';
+import '../../widgets/feedback/snackbar_helper.dart';
 
 class SignInPage extends StatelessWidget {
   const SignInPage({super.key});
@@ -17,12 +18,7 @@ class SignInPage extends StatelessWidget {
         child: BlocListener<SignInCubit, SignInState>(
           listener: (context, state) {
             if (state is SignInFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.error),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              SnackBarHelper.showError(context, state.message);
             }
           },
           child: BlocBuilder<SignInCubit, SignInState>(
@@ -66,17 +62,18 @@ class SignInPage extends StatelessWidget {
                               .textTheme
                               .displaySmall
                               ?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.4,
-                              ),
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.4,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Accedi con email o username',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: Colors.black54,
-                              ),
+                          style:
+                          Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.black54,
+                          ),
                         ),
                         const SizedBox(height: 28),
                         Container(
@@ -108,7 +105,9 @@ class SignInPage extends StatelessWidget {
                                     decoration: InputDecoration(
                                       hintText: 'Email o username',
                                       label: const Text('Email o username'),
-                                      prefixIcon: const Icon(Icons.alternate_email_rounded),
+                                      prefixIcon: const Icon(
+                                        Icons.alternate_email_rounded,
+                                      ),
                                       errorText: formState.showErrors
                                           ? formState.identifierError
                                           : null,
@@ -127,7 +126,7 @@ class SignInPage extends StatelessWidget {
                                           hintText: 'Password',
                                           label: const Text('Password'),
                                           prefixIcon:
-                                              const Icon(Icons.lock_outline),
+                                          const Icon(Icons.lock_outline),
                                           suffixIcon: IconButton(
                                             onPressed: () => context
                                                 .read<ObscureCubit>()
@@ -152,22 +151,22 @@ class SignInPage extends StatelessWidget {
                                     width: double.infinity,
                                     child: loading
                                         ? const Center(
-                                            child: Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                vertical: 12,
-                                              ),
-                                              child: CircularProgressIndicator(),
-                                            ),
-                                          )
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    )
                                         : ElevatedButton.icon(
-                                            onPressed: context
-                                                .read<SignInFormCubit>()
-                                                .submit,
-                                            icon: const Icon(
-                                              Icons.login_rounded,
-                                            ),
-                                            label: const Text('Accedi'),
-                                          ),
+                                      onPressed: context
+                                          .read<SignInFormCubit>()
+                                          .submit,
+                                      icon: const Icon(
+                                        Icons.login_rounded,
+                                      ),
+                                      label: const Text('Accedi'),
+                                    ),
                                   ),
                                   const SizedBox(height: 14),
                                   GoogleAuthButton(
@@ -175,7 +174,9 @@ class SignInPage extends StatelessWidget {
                                     enabled: !loading,
                                     onPressed: loading
                                         ? null
-                                        : () => context.read<SignInCubit>().signInWithGoogle(),
+                                        : () => context
+                                        .read<SignInCubit>()
+                                        .signInWithGoogle(),
                                   ),
                                   const SizedBox(height: 14),
                                   SizedBox(
@@ -184,8 +185,8 @@ class SignInPage extends StatelessWidget {
                                       onPressed: loading
                                           ? null
                                           : () => context
-                                              .read<AuthFlowCubit>()
-                                              .goToSignUp(),
+                                          .read<AuthFlowCubit>()
+                                          .goToSignUp(),
                                       icon: const Icon(
                                         Icons.person_add_alt_1_rounded,
                                         size: 18,
