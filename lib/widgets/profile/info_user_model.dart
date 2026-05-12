@@ -59,12 +59,12 @@ class InfoUser extends StatelessWidget {
               ],
             ),
           ),
-          // Chevron
-          Icon(
-            Icons.chevron_right_rounded,
-            size: 20,
-            color: LightTheme.deepForest.withOpacity(0.25),
-          ),
+          // // Chevron
+          // Icon(
+          //   Icons.chevron_right_rounded,
+          //   size: 20,
+          //   color: LightTheme.deepForest.withOpacity(0.25),
+          // ),
         ],
       ),
     );

@@ -1,33 +1,33 @@
 part of 'google_profile_completion_cubit.dart';
 
-abstract class GoogleProfileCompletionState extends Equatable {
+sealed class GoogleProfileCompletionState extends Equatable {
   const GoogleProfileCompletionState();
 
   @override
   List<Object?> get props => [];
 }
 
-/// Initial state — form is ready and empty.
-class GoogleProfileCompletionInitial extends GoogleProfileCompletionState {
+final class GoogleProfileCompletionInitial
+    extends GoogleProfileCompletionState {
   const GoogleProfileCompletionInitial();
 }
 
-/// Submission in progress.
-class GoogleProfileCompletionLoading extends GoogleProfileCompletionState {
+final class GoogleProfileCompletionLoading
+    extends GoogleProfileCompletionState {
   const GoogleProfileCompletionLoading();
 }
 
-/// Profile saved successfully — caller should navigate to home.
-class GoogleProfileCompletionSuccess extends GoogleProfileCompletionState {
+final class GoogleProfileCompletionSuccess
+    extends GoogleProfileCompletionState {
   const GoogleProfileCompletionSuccess();
 }
 
-/// An error occurred (username taken, network, etc.).
-class GoogleProfileCompletionFailure extends GoogleProfileCompletionState {
-  final String error;
+final class GoogleProfileCompletionFailure
+    extends GoogleProfileCompletionState {
+  final String message;
 
-  const GoogleProfileCompletionFailure(this.error);
+  const GoogleProfileCompletionFailure(this.message);
 
   @override
-  List<Object?> get props => [error];
+  List<Object?> get props => [message];
 }

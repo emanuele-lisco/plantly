@@ -22,7 +22,9 @@ Future<void> main() async {
     FlutterError.presentError(details);
   };
 
-  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  await SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.immersiveSticky,
+  );
 
   await runZonedGuarded(() async {
     try {

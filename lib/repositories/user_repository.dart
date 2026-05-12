@@ -22,7 +22,7 @@ class UserRepository {
       if (!snapshot.exists) return null;
       final data = snapshot.data();
       if (data == null) return null;
-      return _fromFirestore(snapshot.id, data);
+      return PlantlyUser.fromFirestore(snapshot.id, data);
     });
   }
 
@@ -34,7 +34,7 @@ class UserRepository {
       final data = snapshot.data();
       if (data == null) return null;
 
-      return _fromFirestore(snapshot.id, data);
+      return PlantlyUser.fromFirestore(snapshot.id, data);
     } on FirebaseException catch (_) {
       throw const UserRepositoryException(
         'Errore durante il caricamento del profilo utente',
@@ -100,15 +100,15 @@ class UserRepository {
           'city': user.city.trim(),
           'imageUrl': user.imageUrl,
           'bio': user.bio,
-          'createdAt': (user.createdAt ?? now).toIso8601String(),
-          'updatedAt': now.toIso8601String(),
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
         });
 
         transaction.set(usernameDoc, {
           'uid': user.id,
           'email': user.email.trim(),
           'username': user.username.trim(),
-          'updatedAt': now.toIso8601String(),
+          'updatedAt': FieldValue.serverTimestamp(),
         });
       });
     } on UserRepositoryException {
@@ -164,16 +164,15 @@ class UserRepository {
           'city': user.city.trim(),
           'imageUrl': user.imageUrl,
           'bio': user.bio,
-          'updatedAt': now.toIso8601String(),
+          'updatedAt': FieldValue.serverTimestamp(),
         });
 
         transaction.set(newUsernameDoc, {
           'uid': user.id,
           'email': user.email.trim(),
           'username': user.username.trim(),
-          'updatedAt': now.toIso8601String(),
+          'updatedAt': FieldValue.serverTimestamp(),
         });
-
         if (currentUsername.isNotEmpty &&
             currentUsername != normalizedUsername) {
           final oldUsernameDoc = _usernamesCollection.doc(currentUsername);
@@ -347,24 +346,6 @@ class UserRepository {
 
   bool _looksLikeEmail(String value) {
     return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
-  }
-
-  PlantlyUser _fromFirestore(String id, Map<String, dynamic> data) {
-    final normalized = Map<String, dynamic>.from(data);
-
-    normalized['id'] = id;
-
-    final createdAt = normalized['createdAt'];
-    if (createdAt is Timestamp) {
-      normalized['createdAt'] = createdAt.toDate().toUtc().toIso8601String();
-    }
-
-    final updatedAt = normalized['updatedAt'];
-    if (updatedAt is Timestamp) {
-      normalized['updatedAt'] = updatedAt.toDate().toUtc().toIso8601String();
-    }
-
-    return PlantlyUser.fromJson(normalized);
   }
 }
 

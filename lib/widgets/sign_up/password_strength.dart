@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../features/enumType.dart';
+import '../../features/strenght_enum.dart';
 
 class PasswordStrength extends StatelessWidget {
   const PasswordStrength({super.key, required this.strength});

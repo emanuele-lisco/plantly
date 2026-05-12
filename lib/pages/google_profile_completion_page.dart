@@ -27,7 +27,7 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                     (_) => false,
               );
             } else if (state is GoogleProfileCompletionFailure) {
-              SnackBarHelper.showError(context, state.error);
+              SnackBarHelper.showError(context, state.message);
             }
           },
           child: BlocBuilder<GoogleProfileCompletionCubit,

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -57,8 +58,9 @@ class SignUpCubit extends Cubit<SignUpState> {
       } catch (_) {
         try {
           await authUser.delete();
-        } catch (_) {
-          // Da sostituire con logging strutturato in produzione.
+        } catch (e, st) {
+          debugPrint('Errore durante rollback authUser.delete(): $e');
+          debugPrintStack(stackTrace: st);
         }
         rethrow;
       }

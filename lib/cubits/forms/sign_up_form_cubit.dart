@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../features/enumType.dart';
+import '../../features/strenght_enum.dart';
 import '../sign_up/sign_up_cubit.dart';
 
 class SignUpFormState extends Equatable {
