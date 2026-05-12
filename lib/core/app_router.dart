@@ -21,10 +21,7 @@ import 'routes.dart';
 class AppRouter {
   const AppRouter._();
 
-  static Route<dynamic> generateRoute(
-      RouteSettings settings,
-      BuildContext context,
-      ) {
+  static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case Routes.splash:
         return MaterialPageRoute(
@@ -37,7 +34,7 @@ class AppRouter {
             providers: [
               BlocProvider(create: (_) => ObscureCubit()),
               BlocProvider(
-                create: (ctx) => SignInFormCubit(
+                create: (_) => SignInFormCubit(
                   signInCubit: ctx.read<SignInCubit>(),
                 ),
               ),
@@ -52,7 +49,7 @@ class AppRouter {
             providers: [
               BlocProvider(create: (_) => ObscureCubit()),
               BlocProvider(
-                create: (ctx) => SignUpFormCubit(
+                create: (_) => SignUpFormCubit(
                   signUpCubit: ctx.read<SignUpCubit>(),
                 ),
               ),

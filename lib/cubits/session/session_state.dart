@@ -35,3 +35,12 @@ final class SessionAuthenticatedNeedsProfileCompletion extends SessionState {
   @override
   List<Object?> get props => [firebaseUser, incompleteUser];
 }
+
+final class SessionFailure extends SessionState {
+  const SessionFailure(this.message);
+
+  final String message;
+
+  @override
+  List<Object?> get props => [message];
+}

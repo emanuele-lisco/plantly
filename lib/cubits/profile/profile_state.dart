@@ -1,21 +1,21 @@
 part of 'profile_cubit.dart';
 
-abstract class ProfileState extends Equatable {
+sealed class ProfileState extends Equatable {
   const ProfileState();
 
   @override
   List<Object?> get props => [];
 }
 
-class ProfileInitial extends ProfileState {
+final class ProfileInitial extends ProfileState {
   const ProfileInitial();
 }
 
-class ProfileLoading extends ProfileState {
+final class ProfileLoading extends ProfileState {
   const ProfileLoading();
 }
 
-class ProfileLoaded extends ProfileState {
+final class ProfileLoaded extends ProfileState {
   final PlantlyUser user;
 
   const ProfileLoaded(this.user);
@@ -24,7 +24,7 @@ class ProfileLoaded extends ProfileState {
   List<Object?> get props => [user];
 }
 
-class ProfileFailure extends ProfileState {
+final class ProfileFailure extends ProfileState {
   final String message;
 
   const ProfileFailure(this.message);

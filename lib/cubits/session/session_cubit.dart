@@ -27,7 +27,7 @@ class SessionCubit extends Cubit<SessionState> {
       }
 
       final isGoogleUser = firebaseUser.providerData.any(
-            (provider) => provider.providerId == 'google.com',
+        (provider) => provider.providerId == 'google.com',
       );
 
       if (profile == null) {
@@ -41,7 +41,11 @@ class SessionCubit extends Cubit<SessionState> {
           return;
         }
 
-        emit(const SessionAuthenticatedComplete());
+        emit(
+          const SessionFailure(
+            'Profilo utente non trovato. Effettua di nuovo l’accesso.',
+          ),
+        );
         return;
       }
 
@@ -56,8 +60,14 @@ class SessionCubit extends Cubit<SessionState> {
       }
 
       emit(const SessionAuthenticatedComplete());
+    } on UserRepositoryException catch (e) {
+      emit(SessionFailure(e.message));
     } catch (_) {
-      emit(const SessionAuthenticatedComplete());
+      emit(
+        const SessionFailure(
+          'Errore durante il caricamento della sessione utente.',
+        ),
+      );
     }
   }
 

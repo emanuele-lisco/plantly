@@ -55,6 +55,18 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
+  Future<void> clearProfile() async {
+    try {
+      await _subscription?.cancel();
+    } catch (_) {
+      // Nessun rilancio: è una pulizia di stato.
+    } finally {
+      _subscription = null;
+      _currentUserId = null;
+      emit(const ProfileInitial());
+    }
+  }
+
   @override
   Future<void> close() async {
     try {
