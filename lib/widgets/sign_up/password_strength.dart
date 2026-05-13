@@ -1,122 +1,97 @@
 import 'package:flutter/material.dart';
+import 'package:plantly_app/features/theme/models/theme.dart';
 
 import '../../features/strenght_enum.dart';
 
+/// Indicatore forza password — dark botanical.
+///
+/// Usa la palette danger/amber/accent del tema anziché
+/// rosso/arancione/verde hardcoded.
 class PasswordStrength extends StatelessWidget {
   const PasswordStrength({super.key, required this.strength});
+
   final Strength strength;
 
-  static const _width = 60.0;
-  static const _height = 5.0;
-  static const _padding = 4.0;
+  static const _barWidth = 58.0;
+  static const _barHeight = 5.0;
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    final (bars, color, label) = _config(strength);
+
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.all(4),
-            child: Text("FORZA PASSWORD",
-                style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500)),
-          ),
-          const SizedBox(height: 4),
           Row(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(_padding),
-                child: Container(
-                  height: _height,
-                  width: _width,
-                  decoration: BoxDecoration(
-                    color: switch (strength) {
-                      Strength.empty => Colors.grey,
-                      Strength.weak => Colors.red,
-                      Strength.medium => Colors.orange,
-                      Strength.strong => Colors.green,
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+              Text(
+                'FORZA PASSWORD',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: LightTheme.textSecondary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  letterSpacing: 1.0,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(_padding),
-                child: Container(
-                  height: _height,
-                  width: _width,
-                  decoration: BoxDecoration(
-                    color: switch (strength) {
-                      Strength.empty => Colors.grey,
-                      Strength.weak => Colors.grey,
-                      Strength.medium => Colors.orange,
-                      Strength.strong => Colors.green,
-                    },
-                    borderRadius: BorderRadius.circular(10),
+              const SizedBox(width: 10),
+              if (label.isNotEmpty)
+                Text(
+                  label,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(_padding),
-                child: Container(
-                  height: _height,
-                  width: _width,
-                  decoration: BoxDecoration(
-                    color: switch (strength) {
-                      Strength.empty => Colors.grey,
-                      Strength.weak => Colors.grey,
-                      Strength.medium => Colors.orange,
-                      Strength.strong => Colors.green,
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(_padding),
-                child: Container(
-                  height: _height,
-                  width: _width,
-                  decoration: BoxDecoration(
-                    color: switch (strength) {
-                      Strength.empty => Colors.grey,
-                      Strength.weak => Colors.grey,
-                      Strength.medium => Colors.grey,
-                      Strength.strong => Colors.green,
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
             ],
           ),
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.all(4),
-            child: Text(
-                strength == Strength.empty
-                    ? ""
-                    : strength == Strength.weak
-                        ? "Password debole"
-                        : strength == Strength.medium
-                            ? "Password media"
-                            : "Password forte",
-                style: TextStyle(
-                    color: switch (strength) {
-                      Strength.empty => Colors.grey,
-                      Strength.weak => Colors.red,
-                      Strength.medium => Colors.orange,
-                      Strength.strong => Colors.green,
-                    },
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold)),
+
+          const SizedBox(height: 8),
+
+          // Barre
+          Row(
+            children: List.generate(4, (i) {
+              final filled = i < bars;
+              return Padding(
+                padding: const EdgeInsets.only(right: 5),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  height: _barHeight,
+                  width: _barWidth,
+                  decoration: BoxDecoration(
+                    color: filled
+                        ? color
+                        : LightTheme.surface3,
+                    borderRadius: BorderRadius.circular(999),
+                    boxShadow: filled
+                        ? [
+                      BoxShadow(
+                        color: color.withOpacity(0.35),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                        : [],
+                  ),
+                ),
+              );
+            }),
           ),
         ],
       ),
     );
+  }
+
+  (int bars, Color color, String label) _config(Strength s) {
+    return switch (s) {
+      Strength.empty => (0, LightTheme.textMuted, ''),
+      Strength.weak => (1, LightTheme.danger, 'Debole'),
+      Strength.medium => (2, LightTheme.amber, 'Media'),
+      Strength.strong => (4, LightTheme.accent, 'Forte'),
+    };
   }
 }

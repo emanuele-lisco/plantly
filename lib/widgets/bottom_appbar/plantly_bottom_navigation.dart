@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:plantly_app/features/theme/models/theme.dart';
 part 'navigation_item.dart';
 
+/// Bottom navigation bar di Plantly — dark botanical.
+///
+/// La nav è volutamente più chiara dello sfondo canvas (#0E1612)
+/// per emergere visivamente senza essere verde saturo.
+/// Usa surface2 (#242B27) + bordo midGreen sottile + ombra nera.
 class PlantlyBottomNav extends StatelessWidget {
   const PlantlyBottomNav({
     super.key,
@@ -13,59 +19,57 @@ class PlantlyBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Container(
-      margin: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.85),
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: Colors.black.withOpacity(0.04)),
+        // surface2: abbastanza diverso da canvas da essere leggibile,
+        // ma non verde saturo — è grigio-forest neutro.
+        color: LightTheme.surface2,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: LightTheme.midGreen.withOpacity(0.22),
+          width: 1,
+        ),
         boxShadow: [
+          // Ombra nera principale — crea separazione fisica dallo sfondo.
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
+            color: Colors.black.withOpacity(0.55),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+          // Alone verde sottolineato — sottile, non invasivo.
+          BoxShadow(
+            color: LightTheme.accent.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Row(
         children: [
-          // 0 — Home
           _NavItem(
             icon: Icons.home_rounded,
             label: 'Home',
             selected: currentIndex == 0,
-            selectedColor: colorScheme.primary,
-            idleColor: colorScheme.onSurface.withOpacity(0.55),
             onTap: () => onTap(0),
           ),
-          // 1 — Giardino
           _NavItem(
             icon: Icons.local_florist_rounded,
             label: 'Giardino',
             selected: currentIndex == 1,
-            selectedColor: colorScheme.primary,
-            idleColor: colorScheme.onSurface.withOpacity(0.55),
             onTap: () => onTap(1),
           ),
-          // 2 — Cerca
           _NavItem(
             icon: Icons.search_rounded,
             label: 'Cerca',
             selected: currentIndex == 2,
-            selectedColor: colorScheme.primary,
-            idleColor: colorScheme.onSurface.withOpacity(0.55),
             onTap: () => onTap(2),
           ),
-          // 3 — Profilo
           _NavItem(
             icon: Icons.person_rounded,
             label: 'Profilo',
             selected: currentIndex == 3,
-            selectedColor: colorScheme.primary,
-            idleColor: colorScheme.onSurface.withOpacity(0.55),
             onTap: () => onTap(3),
           ),
         ],

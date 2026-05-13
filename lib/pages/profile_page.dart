@@ -7,11 +7,12 @@ import 'package:plantly_app/features/theme/models/theme.dart';
 import 'package:plantly_app/features/user/user.dart';
 
 import '../widgets/feedback/snackbar_helper.dart';
-import '../widgets/profile/info_card.dart';
-import '../widgets/profile/info_user_model.dart';
+import '../widgets/profile/profile_header_widget.dart';
+import '../widgets/profile/profile_info_card.dart';
+import '../widgets/profile/profile_stats_row.dart';
+import '../widgets/profile/profile_action_tile.dart';
 import '../widgets/profile/logout_button.dart';
-import '../widgets/profile/section_label.dart';
-import '../widgets/profile/stat_card.dart';
+
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -50,94 +51,150 @@ class _ProfilePageState extends State<ProfilePage> {
           return BlocBuilder<ProfileCubit, ProfileState>(
             builder: (context, profileState) {
               final profileUser =
-              profileState is ProfileLoaded ? profileState.user : null;
+                  profileState is ProfileLoaded ? profileState.user : null;
 
               final displayName =
-              _resolveDisplayName(profileUser, authUser.displayName);
+                  _resolveDisplayName(profileUser, authUser.displayName);
               final initials = _initials(displayName, authUser.email);
               final email = profileUser?.email ?? authUser.email ?? '';
               final handle =
-              profileUser != null ? '@${profileUser.username}' : '';
+                  profileUser != null ? '@${profileUser.username}' : '';
               final location = _resolveLocation(profileUser);
               final imageUrl = profileUser?.imageUrl;
 
-              return CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: _ProfileHeader(
-                      initials: initials,
-                      displayName: displayName,
-                      handle: handle,
-                      location: location,
-                      profileUser: profileUser,
-                      imageUrl: imageUrl,
-                    ),
+              return DecoratedBox(
+                decoration: const BoxDecoration(
+                  //color: LightTheme.canvas,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFF071E13),
+                      Color(0xFF0A3A20),
+                      Color(0xFF071E13),
+                    ],
+                    stops: [0.0, 0.6, 1.0],
                   ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SectionLabel(label: 'Informazioni personali'),
-                          const SizedBox(height: 10),
-                          InfoCard(
-                            children: [
-                              InfoUser(
-                                icon: Icons.person_outline_rounded,
-                                label: 'Nome completo',
-                                value: displayName,
-                              ),
-                              InfoUser(
-                                icon: Icons.mail_outline_rounded,
-                                label: 'Email',
-                                value: email,
-                              ),
-                              if (profileUser != null && location.isNotEmpty)
-                                InfoUser(
-                                  icon: Icons.location_on_outlined,
-                                  label: 'Posizione',
-                                  value: location,
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          if (profileState is ProfileLoading) ...[
-                            const Center(child: CircularProgressIndicator()),
-                            const SizedBox(height: 24),
-                          ] else if (profileState is ProfileFailure) ...[
-                            const SectionLabel(label: 'Profilo'),
-                            const SizedBox(height: 10),
-                            InfoCard(
-                              children: [
-                                InfoUser(
-                                  icon: Icons.warning_amber_rounded,
-                                  label: 'Errore',
-                                  value: profileState.message,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                          ],
-                          BlocBuilder<SignOutCubit, SignOutState>(
-                            builder: (context, signOutState) {
-                              final isSigningOut =
-                              signOutState is SignOutLoading;
-                              return LogoutButton(
-                                loading: isSigningOut,
-                                onPressed: isSigningOut
-                                    ? null
-                                    : () =>
-                                    context.read<SignOutCubit>().signOut(),
-                              );
-                            },
-                          ),
-                        ],
+                ),
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    // ── Header con avatar ──────────────────────────────
+                    SliverToBoxAdapter(
+                      child: ProfileHeaderWidget(
+                        initials: initials,
+                        displayName: displayName,
+                        handle: handle,
+                        location: location,
+                        bio: profileUser?.bio,
+                        imageUrl: imageUrl,
                       ),
                     ),
-                  ),
-                ],
+
+                    // ── Corpo ──────────────────────────────────────────
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Stats
+                            const ProfileStatsRow(),
+
+                            const SizedBox(height: 28),
+
+                            // Label sezione
+                            const _SectionLabel(label: 'Informazioni personali'),
+                            const SizedBox(height: 12),
+
+                            // Info card
+                            ProfileInfoCard(
+                              items: [
+                                ProfileInfoItem(
+                                  icon: Icons.person_outline_rounded,
+                                  label: 'Nome completo',
+                                  value: displayName,
+                                ),
+                                ProfileInfoItem(
+                                  icon: Icons.mail_outline_rounded,
+                                  label: 'Email',
+                                  value: email,
+                                ),
+                                if (profileUser != null &&
+                                    location.isNotEmpty)
+                                  ProfileInfoItem(
+                                    icon: Icons.location_on_outlined,
+                                    label: 'Posizione',
+                                    value: location,
+                                  ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            if (profileState is ProfileLoading)
+                              const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+
+                            if (profileState is ProfileFailure) ...[
+                              _SectionLabel(label: 'Profilo'),
+                              const SizedBox(height: 10),
+                              ProfileInfoCard(
+                                items: [
+                                  ProfileInfoItem(
+                                    icon: Icons.warning_amber_rounded,
+                                    label: 'Errore',
+                                    value: profileState.message,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+
+                            // Azioni rapide profilo
+                            _SectionLabel(label: 'Impostazioni'),
+                            const SizedBox(height: 12),
+                            ProfileActionTile(
+                              icon: Icons.settings_outlined,
+                              label: 'Impostazioni app',
+                              onTap: () {},
+                            ),
+                            ProfileActionTile(
+                              icon: Icons.notifications_outlined,
+                              label: 'Notifiche',
+                              onTap: () {},
+                            ),
+                            ProfileActionTile(
+                              icon: Icons.help_outline_rounded,
+                              label: 'Supporto',
+                              onTap: () {},
+                            ),
+
+                            const SizedBox(height: 28),
+
+                            // Logout
+                            BlocBuilder<SignOutCubit, SignOutState>(
+                              builder: (context, signOutState) {
+                                final isSigningOut =
+                                    signOutState is SignOutLoading;
+                                return LogoutButton(
+                                  loading: isSigningOut,
+                                  onPressed: isSigningOut
+                                      ? null
+                                      : () => context
+                                          .read<SignOutCubit>()
+                                          .signOut(),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 100),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               );
             },
           );
@@ -147,15 +204,13 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   String _resolveDisplayName(
-      PlantlyUser? profileUser,
-      String? firebaseDisplayName,
-      ) {
+    PlantlyUser? profileUser,
+    String? firebaseDisplayName,
+  ) {
     final fromProfile = profileUser?.fullName.trim();
     if (fromProfile != null && fromProfile.isNotEmpty) return fromProfile;
-
     final fromFirebase = firebaseDisplayName?.trim();
     if (fromFirebase != null && fromFirebase.isNotEmpty) return fromFirebase;
-
     return 'Utente Plantly';
   }
 
@@ -173,165 +228,33 @@ class _ProfilePageState extends State<ProfilePage> {
     final name = displayName.trim();
     if (name.isNotEmpty) {
       final parts =
-      name.split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
+          name.split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
       if (parts.length == 1) {
         return parts.first.characters.take(1).toString().toUpperCase();
       }
       return (parts.first.characters.take(1).toString() +
-          parts.last.characters.take(1).toString())
+              parts.last.characters.take(1).toString())
           .toUpperCase();
     }
     return (email ?? 'P').characters.take(1).toString().toUpperCase();
   }
 }
 
-class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({
-    required this.initials,
-    required this.displayName,
-    required this.handle,
-    required this.location,
-    required this.profileUser,
-    this.imageUrl,
-  });
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.label});
 
-  final String initials;
-  final String displayName;
-  final String handle;
-  final String location;
-  final PlantlyUser? profileUser;
-  final String? imageUrl;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF1a5c3a),
-            LightTheme.deepForest,
-          ],
-          stops: [0.0, 0.72],
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
-          child: Column(
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF2eb872),
-                          Color(0xFF0d6e3c),
-                        ],
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.18),
-                        width: 3,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 24,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: imageUrl != null
-                          ? CircleAvatar(
-                        radius: 50,
-                        backgroundImage: NetworkImage(
-                          imageUrl ?? 'https://via.placeholder.com/150',
-                        ),
-                        backgroundColor: Colors.transparent,
-                      )
-                          : Text(
-                        initials,
-                        style: textTheme.headlineMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 2,
-                    right: 2,
-                    child: Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2eb872),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: LightTheme.deepForest,
-                          width: 2,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.edit_rounded,
-                        size: 13,
-                        color: LightTheme.deepForest,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                displayName,
-                style: textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                [
-                  if (handle.isNotEmpty) handle,
-                  if (location.isNotEmpty) location,
-                ].join(' · '),
-                style: textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withOpacity(0.55),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (profileUser?.bio != null && profileUser!.bio!.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Text(
-                  profileUser!.bio!,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withOpacity(0.62),
-                    height: 1.55,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              const SizedBox(height: 22),
-              const StatsCard(),
-            ],
+    return Text(
+      label.toUpperCase(),
+      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: LightTheme.textSecondary,
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
+            letterSpacing: 1.2,
           ),
-        ),
-      ),
     );
   }
 }

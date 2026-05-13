@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:plantly_app/features/theme/models/theme.dart';
 
 class InfoCard extends StatelessWidget {
   const InfoCard({super.key, required this.children});
@@ -10,16 +10,11 @@ class InfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.84),
+        color: LightTheme.surface1,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.black.withOpacity(0.04)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        border: Border.all(
+          color: LightTheme.midGreen.withOpacity(0.22),
+        ),
       ),
       child: Column(
         children: [
@@ -29,7 +24,7 @@ class InfoCard extends StatelessWidget {
               Divider(
                 height: 1,
                 thickness: 1,
-                color: Colors.black.withOpacity(0.04),
+                color: LightTheme.midGreen.withOpacity(0.15),
                 indent: 16,
                 endIndent: 16,
               ),

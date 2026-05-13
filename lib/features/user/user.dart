@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../core/parse_from_json.dart';
+
 class PlantlyUser extends Equatable {
   final String id;
   final String username;
@@ -79,17 +81,17 @@ class PlantlyUser extends Equatable {
 
   factory PlantlyUser.fromJson(Map<String, dynamic> json) {
     return PlantlyUser(
-      id: _readString(json['id']),
-      username: _readString(json['username']),
-      name: _readString(json['name']),
-      surname: _readString(json['surname']),
-      email: _readString(json['email']),
-      country: _readString(json['country']),
-      city: _readString(json['city']),
-      imageUrl: _readNullableString(json['imageUrl']),
-      bio: _readNullableString(json['bio']),
-      createdAt: _parseDate(json['createdAt']),
-      updatedAt: _parseDate(json['updatedAt']),
+      id: readString(json['id']),
+      username: readString(json['username']),
+      name: readString(json['name']),
+      surname: readString(json['surname']),
+      email: readString(json['email']),
+      country: readString(json['country']),
+      city: readString(json['city']),
+      imageUrl: readNullableString(json['imageUrl']),
+      bio: readNullableString(json['bio']),
+      createdAt: readDateTime(json['createdAt']),
+      updatedAt: readDateTime(json['updatedAt']),
     );
   }
 
@@ -101,32 +103,6 @@ class PlantlyUser extends Equatable {
       ...data,
       'id': id,
     });
-  }
-
-  static String _readString(dynamic value) {
-    if (value is String) return value;
-    return '';
-  }
-
-  static String? _readNullableString(dynamic value) {
-    if (value is String) return value;
-    return null;
-  }
-
-  static DateTime? _parseDate(dynamic value) {
-    if (value is Timestamp) {
-      return value.toDate().toUtc();
-    }
-
-    if (value is DateTime) {
-      return value.toUtc();
-    }
-
-    if (value is String && value.isNotEmpty) {
-      return DateTime.tryParse(value)?.toUtc();
-    }
-
-    return null;
   }
 
   @override

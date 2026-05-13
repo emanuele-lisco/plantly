@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:plantly_app/features/theme/models/theme.dart';
 
-import '../../features/theme/models/theme.dart';
-
+/// Label sezione — dark botanical.
 class SectionLabel extends StatelessWidget {
   const SectionLabel({super.key, required this.label});
 
@@ -12,11 +12,11 @@ class SectionLabel extends StatelessWidget {
     return Text(
       label.toUpperCase(),
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 1.1,
-        color: LightTheme.deepForest.withOpacity(0.45),
-      ),
+            color: LightTheme.textSecondary,
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
+            letterSpacing: 1.2,
+          ),
     );
   }
 }

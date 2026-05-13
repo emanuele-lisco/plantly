@@ -13,7 +13,7 @@ import 'package:plantly_app/pages/google_profile_completion_page.dart';
 import 'package:plantly_app/pages/main_shell_page.dart';
 import 'package:plantly_app/pages/auth/sign_in_page.dart';
 import 'package:plantly_app/pages/auth/sign_up_page.dart';
-import 'package:plantly_app/pages/splash_screen.dart';
+import 'package:plantly_app/pages/initial/splash_screen.dart';
 import 'package:plantly_app/repositories/user_repository.dart';
 
 import 'routes.dart';

@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:plantly_app/features/theme/models/theme.dart';
 
 class StatsCard extends StatelessWidget {
   const StatsCard({super.key});
@@ -8,9 +8,11 @@ class StatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.07),
+        color: LightTheme.accent.withOpacity(0.07),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(
+          color: LightTheme.accent.withOpacity(0.15),
+        ),
       ),
       child: const IntrinsicHeight(
         child: Row(
@@ -44,18 +46,18 @@ class _StatItem extends StatelessWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
+                    color: LightTheme.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
             ),
             const SizedBox(height: 3),
             Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white.withOpacity(0.5),
-                fontSize: 11,
-                letterSpacing: 0.4,
-              ),
+                    color: LightTheme.textSecondary,
+                    fontSize: 11,
+                    letterSpacing: 0.4,
+                  ),
             ),
           ],
         ),
@@ -71,7 +73,7 @@ class _StatDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 1,
-      color: Colors.white.withOpacity(0.12),
+      color: LightTheme.midGreen.withOpacity(0.18),
     );
   }
 }
