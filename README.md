@@ -4,20 +4,6 @@
 
 Plantly è un'app Flutter per la gestione di piante domestiche. Il progetto usa un'architettura pragmatica a livelli con Firebase Auth, Cloud Firestore, Google Sign-In, `flutter_bloc`, `Equatable`, Material 3 e Repository Pattern.
 
-Lo stato attuale non è più quello di una semplice demo: l'app ha una base auth/profilo stabile e una prima vertical slice reale per il dominio piante/giardino.
-
-### Obiettivo funzionale attuale
-
-L'obiettivo principale del codice corrente è rendere operativo il flusso:
-
-```text
-PlantSearchPage
-  -> PlantDetailPage
-    -> Add to Garden
-      -> Firestore users/{uid}/garden/{gardenPlantId}
-        -> GardenPage
-```
-
 ### Funzionalità presenti
 
 - autenticazione email/password;
