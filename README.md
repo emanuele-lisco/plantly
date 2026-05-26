@@ -210,14 +210,11 @@ PERENUAL_BASE_URL
 PERENUAL_API_KEY
 ```
 
-Avvio consigliato:
+Come avviare l'app:
 
 ```bash
 flutter run --dart-define=PERENUAL_API_KEY=LA_TUA_KEY
 ```
-
-Criticità rilevata: nel file è ancora presente una API key commentata. Va rimossa dal codice sorgente, anche se è in commento.
-
 ---
 
 ## 6. Autenticazione e sessione
