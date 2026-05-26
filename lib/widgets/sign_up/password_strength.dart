@@ -1,24 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
-
 import '../../features/strenght_enum.dart';
 
-/// Indicatore forza password — dark botanical.
-///
-/// Usa la palette danger/amber/accent del tema anziché
-/// rosso/arancione/verde hardcoded.
+/// Indicatore forza password — light botanical.
 class PasswordStrength extends StatelessWidget {
   const PasswordStrength({super.key, required this.strength});
 
   final Strength strength;
 
   static const _barWidth = 58.0;
-  static const _barHeight = 5.0;
+  static const _barHeight = 6.0;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-
     final (bars, color, label) = _config(strength);
 
     return Container(
@@ -49,10 +44,7 @@ class PasswordStrength extends StatelessWidget {
                 ),
             ],
           ),
-
           const SizedBox(height: 8),
-
-          // Barre
           Row(
             children: List.generate(4, (i) {
               final filled = i < bars;
@@ -63,14 +55,12 @@ class PasswordStrength extends StatelessWidget {
                   height: _barHeight,
                   width: _barWidth,
                   decoration: BoxDecoration(
-                    color: filled
-                        ? color
-                        : LightTheme.surface3,
+                    color: filled ? color : LightTheme.border,
                     borderRadius: BorderRadius.circular(999),
                     boxShadow: filled
                         ? [
                       BoxShadow(
-                        color: color.withOpacity(0.35),
+                        color: color.withOpacity(0.3),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 
-/// Card contenitore per i form di autenticazione — dark botanical.
 class AuthCard extends StatelessWidget {
   const AuthCard({super.key, required this.child});
 
@@ -12,16 +11,14 @@ class AuthCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: LightTheme.surface1,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: LightTheme.midGreen.withOpacity(0.25),
-        ),
+        color: LightTheme.surface2,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: LightTheme.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.35),
-            blurRadius: 30,
-            offset: const Offset(0, 14),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 
-/// Modello dati per una singola metrica della Home.
 class HomeMetric {
   const HomeMetric({
     required this.title,
     required this.value,
     required this.icon,
-    this.accent = LightTheme.accent,
+    this.accent = LightTheme.primary,
   });
 
   final String title;
@@ -16,7 +15,6 @@ class HomeMetric {
   final Color accent;
 }
 
-/// Griglia 2×N di card metriche per la Home — dark botanical.
 class HomeMetricGrid extends StatelessWidget {
   const HomeMetricGrid({super.key, required this.metrics});
 
@@ -50,26 +48,23 @@ class HomeMetricGrid extends StatelessWidget {
 
 class _MetricCard extends StatelessWidget {
   const _MetricCard({required this.metric});
-
   final HomeMetric metric;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final t = Theme.of(context).textTheme;
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: LightTheme.surface1,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: LightTheme.midGreen.withOpacity(0.2),
-        ),
+        color: LightTheme.surface2,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: LightTheme.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -79,7 +74,7 @@ class _MetricCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
-              color: metric.accent.withOpacity(0.12),
+              color: metric.accent.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(metric.icon, color: metric.accent, size: 18),
@@ -87,7 +82,7 @@ class _MetricCard extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             metric.title,
-            style: textTheme.bodyMedium?.copyWith(
+            style: t.bodyMedium?.copyWith(
               color: LightTheme.textSecondary,
               fontSize: 12,
             ),
@@ -95,7 +90,7 @@ class _MetricCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             metric.value,
-            style: textTheme.titleLarge?.copyWith(
+            style: t.titleLarge?.copyWith(
               color: LightTheme.textPrimary,
               fontWeight: FontWeight.w800,
             ),

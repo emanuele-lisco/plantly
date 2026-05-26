@@ -1,216 +1,124 @@
 import 'package:flutter/material.dart';
+import 'package:plantly_app/features/plant/garden_plant.dart';
+import 'package:plantly_app/features/theme/models/theme.dart';
 
-import '../../features/plant/user_plant.dart';
-import '../../features/theme/models/theme.dart';
-import 'meter_row.dart';
-
-/// Card singola pianta — dark botanical.
-///
-/// Pronta per ricevere callbacks reali (onWater, onDetail) da GardenCubit.
 class PlantCard extends StatelessWidget {
   const PlantCard({
     super.key,
     required this.plant,
+    this.canWater = false,
+    this.waterDisabledReason = '',
     this.onWater,
-    this.onDetail,
+    this.onRemove,
   });
 
-  final UserPlant plant;
+  final GardenPlant plant;
+  final bool canWater;
+  final String waterDisabledReason;
   final VoidCallback? onWater;
-  final VoidCallback? onDetail;
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final health = plant.health;
-    final healthColor = _healthColor(health);
-    final healthLabel = _healthLabel(health);
+    final nextWateringText = _nextWateringLabel(plant.nextWateringAt);
+    final waterButtonLabel = canWater ? 'Annaffia' : 'Vaso non collegato';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
-        color: LightTheme.surface1,
-        border: Border.all(
-          color: LightTheme.midGreen.withOpacity(0.22),
-        ),
+        color: LightTheme.surface2,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: LightTheme.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.25),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
-          // ── Header pianta ─────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Avatar emoji
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        LightTheme.midGreen.withOpacity(0.4),
-                        LightTheme.primary.withOpacity(0.8),
-                      ],
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      plant.imageUrl,
-                      style: const TextStyle(fontSize: 26),
-                    ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: _PlantImage(imageUrl: plant.imageUrl),
                   ),
                 ),
                 const SizedBox(width: 14),
-                // Info
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        plant.name,
-                        style: textTheme.titleLarge?.copyWith(
+                        plant.displayName,
+                        style: textTheme.titleMedium?.copyWith(
                           color: LightTheme.textPrimary,
+                          fontWeight: FontWeight.w700,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Text(
-                        plant.species,
+                        plant.scientificName.isEmpty
+                            ? plant.commonName
+                            : plant.scientificName,
                         style: textTheme.bodyMedium?.copyWith(
-                          fontStyle: FontStyle.italic,
                           color: LightTheme.textSecondary,
+                          fontStyle: FontStyle.italic,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 6),
-                      Row(
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: LightTheme.midGreen.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.room_outlined,
-                                  size: 11,
-                                  color: LightTheme.sage,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  plant.room,
-                                  style: textTheme.bodyMedium?.copyWith(
-                                    color: LightTheme.sage,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          _MiniBadge(
+                            icon: Icons.water_drop_rounded,
+                            label: _wateringLabel(plant.watering),
+                            color: LightTheme.water,
                           ),
+                          if (plant.indoor != null)
+                            _MiniBadge(
+                              icon: plant.indoor!
+                                  ? Icons.home_rounded
+                                  : Icons.park_rounded,
+                              label: plant.indoor! ? 'Indoor' : 'Outdoor',
+                              color: LightTheme.primary,
+                            ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                // Chip stato salute
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: healthColor.withOpacity(0.12),
-                    border: Border.all(
-                      color: healthColor.withOpacity(0.25),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        '$health%',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: healthColor,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        healthLabel,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: healthColor.withOpacity(0.8),
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
-
-          // ── Divider ───────────────────────────────────────────────────
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: LightTheme.midGreen.withOpacity(0.15),
-            indent: 16,
-            endIndent: 16,
-          ),
-
-          // ── Metriche ──────────────────────────────────────────────────
+          const Divider(height: 1, thickness: 1, color: LightTheme.border),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-            child: Column(
-              children: [
-                MeterRow(label: 'Umidità', value: plant.moisture),
-                const SizedBox(height: 10),
-                MeterRow(label: 'Luce', value: plant.light),
-              ],
-            ),
-          ),
-
-          // ── Prossima azione ───────────────────────────────────────────
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: LightTheme.accent.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: LightTheme.accent.withOpacity(0.15),
-              ),
-            ),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Row(
               children: [
                 const Icon(
-                  Icons.tips_and_updates_outlined,
-                  size: 15,
-                  color: LightTheme.accent,
+                  Icons.schedule_rounded,
+                  color: LightTheme.primary,
+                  size: 18,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    plant.nextAction,
+                    nextWateringText,
                     style: textTheme.bodyMedium?.copyWith(
-                      color: LightTheme.accent,
+                      color: LightTheme.textSecondary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -218,30 +126,70 @@ class PlantCard extends StatelessWidget {
               ],
             ),
           ),
-
-          // ── Azioni ───────────────────────────────────────────────────
+          if (!canWater && waterDisabledReason.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: LightTheme.amber.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: LightTheme.amber.withOpacity(0.25),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.info_outline_rounded,
+                      color: LightTheme.amber,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        waterDisabledReason,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: LightTheme.textSecondary,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: onWater ?? () {},
+                    onPressed: canWater ? onWater : null,
                     icon: const Icon(Icons.water_drop_rounded, size: 16),
-                    label: const Text('Annaffia'),
+                    label: Text(waterButtonLabel),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size.fromHeight(42),
+                      backgroundColor: LightTheme.water,
+                      disabledBackgroundColor: LightTheme.border,
+                      disabledForegroundColor: LightTheme.textMuted,
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: onDetail ?? () {},
+                  child: OutlinedButton.icon(
+                    onPressed: onRemove,
+                    icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                    label: const Text('Rimuovi'),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(42),
+                      foregroundColor: LightTheme.coral,
+                      side: BorderSide(
+                          color: LightTheme.coral.withOpacity(0.4)),
                     ),
-                    child: const Text('Dettagli'),
                   ),
                 ),
               ],
@@ -252,15 +200,140 @@ class PlantCard extends StatelessWidget {
     );
   }
 
-  Color _healthColor(int value) {
-    if (value >= 85) return LightTheme.accent;
-    if (value >= 60) return LightTheme.amber;
-    return LightTheme.danger;
+  static String _wateringLabel(String watering) {
+    switch (watering.trim().toLowerCase()) {
+      case 'frequent':
+        return 'Frequente';
+      case 'average':
+        return 'Media';
+      case 'minimum':
+        return 'Minima';
+      case 'none':
+        return 'Non indicata';
+      default:
+        return watering.trim().isEmpty ? 'Non indicata' : watering.trim();
+    }
   }
 
-  String _healthLabel(int value) {
-    if (value >= 85) return 'ottima';
-    if (value >= 60) return 'buona';
-    return 'cura!';
+  static String _nextWateringLabel(DateTime? nextWateringAt) {
+    if (nextWateringAt == null) {
+      return 'Prossima cura non ancora calcolata';
+    }
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final next = nextWateringAt.toLocal();
+    final nextDay = DateTime(next.year, next.month, next.day);
+    final difference = nextDay.difference(today).inDays;
+
+    if (difference < 0) return 'Cura in ritardo';
+    if (difference == 0) return 'Cura prevista oggi';
+    if (difference == 1) return 'Cura prevista domani';
+    return 'Cura prevista tra $difference giorni';
+  }
+}
+
+class _MiniBadge extends StatelessWidget {
+  const _MiniBadge({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.09),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withOpacity(0.20)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: textTheme.bodySmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlantImage extends StatelessWidget {
+  const _PlantImage({required this.imageUrl});
+
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmedUrl = imageUrl.trim();
+
+    if (trimmedUrl.isEmpty) {
+      return const _PlantImageFallback();
+    }
+
+    if (!trimmedUrl.startsWith('http')) {
+      return Container(
+        color: LightTheme.sage.withOpacity(0.2),
+        alignment: Alignment.center,
+        child: Text(
+          trimmedUrl,
+          style: const TextStyle(fontSize: 28),
+        ),
+      );
+    }
+
+    return Image.network(
+      trimmedUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => const _PlantImageFallback(),
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Container(
+          color: LightTheme.surface3,
+          alignment: Alignment.center,
+          child: const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: LightTheme.primary,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PlantImageFallback extends StatelessWidget {
+  const _PlantImageFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: LightTheme.sage.withOpacity(0.15),
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.local_florist_rounded,
+        color: LightTheme.primary,
+        size: 28,
+      ),
+    );
   }
 }

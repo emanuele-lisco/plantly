@@ -1,44 +1,105 @@
-import 'package:flutter/material.dart';
-import 'package:plantly_app/features/theme/models/theme.dart';
-import 'package:plantly_app/widgets/search/search_bar_widget.dart';
-import 'package:plantly_app/widgets/search/search_category_chips.dart';
-import 'package:plantly_app/widgets/search/search_coming_soon_card.dart';
+import 'dart:async';
 
-/// Pagina Cerca piante — dark botanical.
-///
-/// Struttura modulare pronta per PlantSearchCubit futuro.
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:plantly_app/blocs/auth/auth_bloc.dart';
+import 'package:plantly_app/cubits/garden/garden_cubit.dart';
+import 'package:plantly_app/cubits/plant_details/plant_details_cubit.dart';
+import 'package:plantly_app/pages/plant_detail_page.dart' hide GardenCubit;
+import 'package:plantly_app/cubits/plant_search/plant_search_cubit.dart';
+import 'package:plantly_app/cubits/plant_search/plant_search_state.dart';
+import 'package:plantly_app/features/plant/plant_species.dart';
+import 'package:plantly_app/features/theme/models/theme.dart';
+import 'package:plantly_app/repositories/plant_repository.dart';
+import 'package:plantly_app/widgets/search/plant_species_card.dart';
+import 'package:plantly_app/widgets/search/search_bar_widget.dart';
+
 class PlantSearchPage extends StatelessWidget {
   const PlantSearchPage({super.key});
 
-  static const _categories = [
-    SearchCategory(label: 'Interno', icon: Icons.home_outlined),
-    SearchCategory(label: 'Esterno', icon: Icons.deck_outlined),
-    SearchCategory(label: 'Succulente', icon: Icons.wb_sunny_outlined),
-    SearchCategory(label: 'Aromatiche', icon: Icons.eco_outlined),
-    SearchCategory(label: 'Fioriture', icon: Icons.local_florist_outlined),
-    SearchCategory(label: 'Acquatiche', icon: Icons.water_outlined),
-  ];
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (ctx) => PlantSearchCubit(
+        plantRepository: ctx.read<PlantRepository>(),
+      ),
+      child: const _PlantSearchView(),
+    );
+  }
+}
+
+class _PlantSearchView extends StatefulWidget {
+  const _PlantSearchView();
+
+  @override
+  State<_PlantSearchView> createState() => _PlantSearchViewState();
+}
+
+class _PlantSearchViewState extends State<_PlantSearchView> {
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 450), () {
+      if (!mounted) return;
+      context.read<PlantSearchCubit>().searchPlants(value);
+    });
+  }
+
+  void _onSearchSubmitted(String value) {
+    _debounce?.cancel();
+    context.read<PlantSearchCubit>().searchPlants(value);
+  }
+
+  void _clearSearch() {
+    _debounce?.cancel();
+    _searchController.clear();
+    context.read<PlantSearchCubit>().clearSearch();
+  }
+
+  void _openPlantDetail(PlantSpecies plant) {
+    final userId = context.read<AuthBloc>().state.user?.uid ?? '';
+    final plantRepository = context.read<PlantRepository>();
+    final gardenCubit = context.read<GardenCubit>();
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: gardenCubit),
+            BlocProvider(
+              create: (_) => PlantDetailsCubit(
+                plantRepository: plantRepository,
+              )..loadPlantDetails(plant),
+            ),
+          ],
+          child: PlantDetailPage(
+            initialPlant: plant,
+            userId: userId,
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF091A10),
-            LightTheme.canvas,
-          ],
-        ),
-      ),
+      decoration: const BoxDecoration(gradient: LightTheme.pageGradient),
       child: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
           children: [
-            // ── Header ────────────────────────────────────────────────
             Text(
               'Esplora',
               style: textTheme.bodyMedium?.copyWith(
@@ -56,31 +117,186 @@ class PlantSearchPage extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Specie, cura, compatibilità e molto altro.',
+              'Trova una specie, apri il dettaglio e aggiungila al tuo giardino.',
               style: textTheme.bodyLarge?.copyWith(
                 color: LightTheme.textSecondary,
               ),
             ),
-
             const SizedBox(height: 22),
-
-            // ── Barra di ricerca ─────────────────────────────────────
-            const SearchBarWidget(),
-
-            const SizedBox(height: 24),
-
-            // ── Categorie ────────────────────────────────────────────
-            Text('Esplora per categoria', style: textTheme.titleLarge),
-            const SizedBox(height: 14),
-            const SearchCategoryChips(categories: _categories),
-
+            SearchBarWidget(
+              controller: _searchController,
+              hint: 'Cerca una pianta…',
+              onChanged: _onSearchChanged,
+              onSubmitted: _onSearchSubmitted,
+              onClear: _clearSearch,
+            ),
             const SizedBox(height: 26),
-
-            // ── Card "in arrivo" ─────────────────────────────────────
-            const SearchComingSoonCard(),
+            BlocBuilder<PlantSearchCubit, PlantSearchState>(
+              builder: (context, state) {
+                return switch (state) {
+                  PlantSearchInitial() => const _InitialSearchState(),
+                  PlantSearchLoading() => const _SearchLoadingState(),
+                  PlantSearchEmpty() => _SearchEmptyState(query: state.query),
+                  PlantSearchFailure() => _SearchErrorState(message: state.message),
+                  PlantSearchSuccess() => _SearchResults(
+                      plants: state.plants,
+                      onPlantTap: _openPlantDetail,
+                    ),
+                };
+              },
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _InitialSearchState extends StatelessWidget {
+  const _InitialSearchState();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: LightTheme.surface1,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: LightTheme.border),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.search_rounded, color: LightTheme.sage),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Scrivi il nome di una pianta per iniziare la ricerca.',
+              style: textTheme.bodyMedium?.copyWith(color: LightTheme.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SearchLoadingState extends StatelessWidget {
+  const _SearchLoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 36),
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(LightTheme.accent),
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchEmptyState extends StatelessWidget {
+  const _SearchEmptyState({required this.query});
+
+  final String query;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(26),
+      decoration: BoxDecoration(
+        color: LightTheme.surface1,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: LightTheme.border),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.search_off_rounded, color: LightTheme.textMuted, size: 34),
+          const SizedBox(height: 12),
+          Text('Nessuna pianta trovata', style: textTheme.titleMedium),
+          const SizedBox(height: 6),
+          Text(
+            'Nessun risultato per "$query". Prova con un nome diverso.',
+            textAlign: TextAlign.center,
+            style: textTheme.bodyMedium?.copyWith(color: LightTheme.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SearchErrorState extends StatelessWidget {
+  const _SearchErrorState({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: LightTheme.danger.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: LightTheme.danger.withOpacity(0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.error_outline_rounded, color: LightTheme.danger),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: textTheme.bodyMedium?.copyWith(color: LightTheme.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SearchResults extends StatelessWidget {
+  const _SearchResults({
+    required this.plants,
+    required this.onPlantTap,
+  });
+
+  final List<PlantSpecies> plants;
+  final void Function(PlantSpecies plant) onPlantTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${plants.length} risultati',
+          style: textTheme.bodyMedium?.copyWith(color: LightTheme.textSecondary),
+        ),
+        const SizedBox(height: 14),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 14,
+            crossAxisSpacing: 14,
+            childAspectRatio: 0.68,
+          ),
+          itemCount: plants.length,
+          itemBuilder: (_, index) => PlantSpeciesCard(
+            plant: plants[index],
+            onTap: () => onPlantTap(plants[index]),
+          ),
+        ),
+      ],
     );
   }
 }

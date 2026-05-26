@@ -12,7 +12,7 @@ class SnackBarHelper {
     _show(
       context,
       message: message,
-      backgroundColor: Colors.redAccent,
+      backgroundColor: LightTheme.danger,
       icon: Icons.error_outline_rounded,
       duration: duration,
     );
@@ -26,7 +26,7 @@ class SnackBarHelper {
     _show(
       context,
       message: message,
-      backgroundColor: LightTheme.deepForest,
+      backgroundColor: LightTheme.primaryDark,
       icon: Icons.check_circle_outline_rounded,
       duration: duration,
     );
@@ -40,7 +40,7 @@ class SnackBarHelper {
     _show(
       context,
       message: message,
-      backgroundColor: LightTheme.moss,
+      backgroundColor: LightTheme.primary,
       icon: Icons.info_outline_rounded,
       duration: duration,
     );
@@ -54,7 +54,7 @@ class SnackBarHelper {
     _show(
       context,
       message: message,
-      backgroundColor: Colors.orangeAccent,
+      backgroundColor: LightTheme.amber,
       icon: Icons.warning_amber_rounded,
       duration: duration,
     );
@@ -76,6 +76,10 @@ class SnackBarHelper {
           behavior: SnackBarBehavior.floating,
           duration: duration,
           backgroundColor: backgroundColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
           content: Row(
             children: [
               Icon(icon, color: Colors.white, size: 20),
@@ -83,7 +87,11 @@ class SnackBarHelper {
               Expanded(
                 child: Text(
                   message,
-                  style: Theme.of(context).snackBarTheme.contentTextStyle,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],

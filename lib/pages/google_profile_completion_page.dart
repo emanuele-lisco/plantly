@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../core/routes.dart';
 import '../cubits/forms/google_profile_completion_form_cubit.dart';
 import '../cubits/google_profile_completion/google_profile_completion_cubit.dart';
+import '../features/theme/models/theme.dart';
 import '../widgets/feedback/snackbar_helper.dart';
 
 class GoogleProfileCompletionPage extends StatelessWidget {
@@ -12,6 +13,7 @@ class GoogleProfileCompletionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: LightTheme.warmBackground,
       body: SafeArea(
         child: BlocListener<GoogleProfileCompletionCubit,
             GoogleProfileCompletionState>(
@@ -21,7 +23,6 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                 context,
                 'Profilo completato con successo',
               );
-
               Navigator.of(context).pushNamedAndRemoveUntil(
                 Routes.home,
                     (_) => false,
@@ -33,7 +34,8 @@ class GoogleProfileCompletionPage extends StatelessWidget {
           child: BlocBuilder<GoogleProfileCompletionCubit,
               GoogleProfileCompletionState>(
             builder: (context, completionState) {
-              final loading = completionState is GoogleProfileCompletionLoading;
+              final loading =
+              completionState is GoogleProfileCompletionLoading;
 
               return Center(
                 child: SingleChildScrollView(
@@ -47,20 +49,27 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                     child: Column(
                       children: [
                         const SizedBox(height: 10),
+                        // ── Logo ─────────────────────────────────────────
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(26),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.12),
-                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            color: LightTheme.surface2,
+                            border: Border.all(color: LightTheme.border),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
                           ),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(22),
+                            borderRadius: BorderRadius.circular(16),
                             child: Image.asset(
                               'assets/icon/plantly_logo.png',
-                              width: 86,
-                              height: 86,
+                              width: 80,
+                              height: 80,
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -73,39 +82,43 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                               .displaySmall
                               ?.copyWith(
                             fontWeight: FontWeight.w800,
-                            letterSpacing: 0.4,
+                            letterSpacing: -0.5,
+                            color: LightTheme.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Completa il tuo profilo per continuare',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.black54,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                            color: LightTheme.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 28),
+                        // ── Card form ─────────────────────────────────────
                         Container(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.7),
+                            color: LightTheme.surface2,
                             borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: Colors.black.withOpacity(0.04),
-                            ),
+                            border: Border.all(color: LightTheme.border),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.12),
-                                blurRadius: 22,
-                                offset: const Offset(0, 10),
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
                               ),
                             ],
                           ),
-                          child: BlocBuilder<GoogleProfileCompletionFormCubit,
+                          child: BlocBuilder<
+                              GoogleProfileCompletionFormCubit,
                               GoogleProfileCompletionFormState>(
                             builder: (context, formState) {
-                              final formCubit =
-                              context.read<GoogleProfileCompletionFormCubit>();
+                              final formCubit = context
+                                  .read<GoogleProfileCompletionFormCubit>();
 
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,16 +187,20 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                                         padding: EdgeInsets.symmetric(
                                           vertical: 12,
                                         ),
-                                        child: CircularProgressIndicator(),
+                                        child:
+                                        CircularProgressIndicator(
+                                          color: LightTheme.primary,
+                                          strokeWidth: 2.5,
+                                        ),
                                       ),
                                     )
                                         : ElevatedButton.icon(
                                       onPressed: formCubit.submit,
                                       icon: const Icon(
-                                        Icons.check_circle_outline_rounded,
+                                        Icons
+                                            .check_circle_outline_rounded,
                                       ),
-                                      label:
-                                      const Text('Salva e continua'),
+                                      label: const Text('Salva e continua'),
                                     ),
                                   ),
                                 ],

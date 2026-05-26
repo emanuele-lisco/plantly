@@ -10,4 +10,4 @@ class PerenualConfig {
 
   static bool get hasApiKey => apiKey.trim().isNotEmpty;
 }
-//sk-vBjJ6a03788350d1917231
+//flutter run --dart-define=PERENUAL_API_KEY=sk-vBjJ6a03788350d1917231

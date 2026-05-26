@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 
-/// Tile azione profilo (impostazioni, notifiche, supporto…) — dark botanical.
 class ProfileActionTile extends StatelessWidget {
   const ProfileActionTile({
     super.key,
@@ -26,11 +25,16 @@ class ProfileActionTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: LightTheme.surface1,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: LightTheme.midGreen.withOpacity(0.2),
-          ),
+          color: LightTheme.surface2,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: LightTheme.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -38,10 +42,10 @@ class ProfileActionTile extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: LightTheme.midGreen.withOpacity(0.2),
+                color: LightTheme.primary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, size: 17, color: LightTheme.sage),
+              child: Icon(icon, size: 18, color: LightTheme.primary),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -54,7 +58,7 @@ class ProfileActionTile extends StatelessWidget {
               ),
             ),
             trailing ??
-                Icon(
+                const Icon(
                   Icons.chevron_right_rounded,
                   size: 18,
                   color: LightTheme.textMuted,

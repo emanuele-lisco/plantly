@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 
-/// Stato vuoto della pagina Giardino — dark botanical.
+/// Stato vuoto della pagina Giardino — light botanical.
 class GardenEmptyState extends StatelessWidget {
   const GardenEmptyState({super.key});
 
@@ -12,11 +12,9 @@ class GardenEmptyState extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
-        color: LightTheme.surface1,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: LightTheme.midGreen.withOpacity(0.2),
-        ),
+        color: LightTheme.surface2,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: LightTheme.border),
       ),
       child: Column(
         children: [
@@ -25,12 +23,12 @@ class GardenEmptyState extends StatelessWidget {
             height: 70,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: LightTheme.midGreen.withOpacity(0.15),
+              color: LightTheme.sage.withOpacity(0.2),
             ),
             child: const Icon(
               Icons.local_florist_outlined,
               size: 34,
-              color: LightTheme.textSecondary,
+              color: LightTheme.primary,
             ),
           ),
           const SizedBox(height: 18),

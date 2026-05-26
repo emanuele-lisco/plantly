@@ -35,6 +35,7 @@ class App extends StatelessWidget {
             child: child ?? const SizedBox.shrink(),
           );
         },
+
       ),
     );
   }

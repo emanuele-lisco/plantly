@@ -1,89 +1,117 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+/// Palette Plantly — Botanica Chiara
+///
+/// Principio: sfondi chiari e caldi, verde botanico come accento principale.
+/// Card bianche o avorio. Gerarchia visiva pulita e leggibile.
 class LightTheme {
-  // ── Dark Botanical Palette ─────────────────────────────────────────────────
-  //
-  // Regola d'oro: il verde saturo appare SOLO negli elementi interattivi
-  // (accent, sage, bordi sottili). Sfondi e surface sono neutri quasi-neri
-  // con una tinta forest appena percettibile.
-  //
-  // Risultato visivo: app botanica premium, non terminale Matrix.
+  // ── Sfondi ─────────────────────────────────────────────────────────────────
 
-  // ── Brand ─────────────────────────────────────────────────────────────────
+  /// Scaffold background — verde sage chiaro, quasi bianco.
+  static const canvas = Color(0xFFE9EDE0); // Soft sage background
 
+  /// Sfondo caldo alternativo — per pagine auth e profilo.
+  static const warmBackground = Color(0xFFF7F3EA);
 
-  static const primary = Color(0xFF0A4028);
+  /// Surface principale — avorio quasi bianco.
+  static const surface1 = Color(0xFFFFFDF7);
 
-  // ── Canvas & Surface ──────────────────────────────────────────────────────
-  // Desaturati intenzionalmente: la tinta verde è < 5% sul cerchio colori.
-  // Questo crea profondità senza monotonicità.
+  /// Surface elevata — bianco puro per card in primo piano.
+  static const surface2 = Color(0xFFFFFFFF);
 
-  /// Sfondo principale — nero caldo con appena una tinta foresta.
-  static const canvas = Color(0xFF0E1612);
+  /// Input fill, chip — grigio verdino molto chiaro.
+  static const surface3 = Color(0xFFF0F4EC);
 
-  /// Card principale — grigio carbonio con leggerissima nota verde.
-  static const surface1 = Color(0xFF1A1F1C);
+  // ── Verde botanico ──────────────────────────────────────────────────────────
 
-  /// Card elevata — un passo più chiaro, per bottom nav e modal.
-  static const surface2 = Color(0xFF242B27);
+  /// Verde scuro — CTA principali, header accenti.
+  static const primaryDark = Color(0xFF0A4028);
 
-  /// Riempimento input, chip interni — warm-dark slate.
-  static const surface3 = Color(0xFF2D3530);
+  /// Verde primario — bottoni, badge, accenti principali.
+  static const primary = Color(0xFF1F5C3A);
 
-  // ── Accenti verdi — usati SOLO per elementi interattivi e bordi ───────────
+  /// Sage secondario — accenti morbidi, icone secondarie.
+  static const sage = Color(0xFFA8BFA3);
 
-  /// Bordi sottili, divisori, anelli — mai come sfondo pieno.
-  static const midGreen = Color(0xFF2E5C42);
+  // ── Colori semantici ────────────────────────────────────────────────────────
 
-  /// Verde brillante — CTA, stati attivi, badge salute ottima.
-  static const accent = Color(0xFF3DC97A);
+  /// Azzurro acqua — umidità, irrigazione.
+  static const water = Color(0xFF2AAAE0);
 
-  /// Sage desaturato — icone secondarie, label, tag.
-  static const sage = Color(0xFF6BAE89);
+  /// Ambra — luce, fioritura, promemoria medi.
+  static const amber = Color(0xFFD89A3D);
 
-  // ── Accenti caldi — varietà cromatica botanica ────────────────────────────
+  /// Terra calda — cura, indoor/outdoor badge.
+  static const earth = Color(0xFFB07040);
 
-  /// Marrone terra — icone cura, badge annaffiatura.
-  static const earth = Color(0xFFB87A4E);
+  /// Corallo soft — avvisi non critici.
+  static const coral = Color(0xFFC85A54);
 
-  /// Azzurro acqua — indicatori umidità e irrigazione.
-  static const water = Color(0xFF5BB8E8);
+  /// Successo — conferme, salute ottima.
+  static const success = Color(0xFF2F7D4F);
 
-  /// Ambra — avvisi cura, promemoria.
-  static const amber = Color(0xFFE8A94A);
+  /// Errore — pericolo, tossicità, stati critici.
+  static const danger = Color(0xFFC85A54);
 
-  /// Rosso — salute critica, errori.
-  static const danger = Color(0xFFE05252);
+  // ── Testo ──────────────────────────────────────────────────────────────────
 
-  // ── Testo ─────────────────────────────────────────────────────────────────
+  /// Testo primario — quasi nero su sfondo chiaro.
+  static const textPrimary = Color(0xFF102018);
 
-  /// Ivory caldo — testo primario. Mai bianco puro.
-  static const textPrimary = Color(0xFFF0EDE8);
+  /// Testo secondario — grigio-verde medio.
+  static const textSecondary = Color(0xFF5F6F66);
 
-  /// Grigio slate caldo — label secondarie, metadati.
-  static const textSecondary = Color(0xFF9AA89F);
+  /// Testo muted — placeholder, hint, disabled.
+  static const textMuted = Color(0xFF8A948C);
 
-  /// Grigio muted — placeholder, hint, testo disabilitato.
-  static const textMuted = Color(0xFF5C6862);
+  // ── Bordi ──────────────────────────────────────────────────────────────────
 
-  // ── Legacy aliases ─────────────────────────────────────────────────────────
-  static const primaryLight = midGreen;
-  static const deepForest = Color(0xFF0A2016);
-  static const moss = Color(0xFF1A4D30);
-  static const sand = Color(0xFFE5D6BF);
+  /// Bordo soft — divisori e contorni card.
+  static const border = Color(0xFFE1DED2);
+
+  // ── Legacy aliases (mantenuti per compatibilità riferimenti esistenti) ──────
+  static const accent = primary;
+  static const midGreen = primary;
+  static const moss = primaryDark;
+  static const deepForest = primaryDark;
+  static const seed = primary;
+  static const primaryLight = sage;
+  static const sand = Color(0xFFF7F3EA);
   static const clay = earth;
   static const mist = canvas;
   static const mintTint = surface3;
-  static const seed = Color(0xFF2A6B48);
+
+  // ── Gradienti ──────────────────────────────────────────────────────────────
+
+  /// Gradiente hero card — warm botanical.
+  static const heroGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF1F5C3A), Color(0xFF0A4028)],
+  );
+
+  /// Gradiente pagina — sfondo leggermente degradante (quasi piatto).
+  static const pageGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFFE9EDE0), Color(0xFFF7F3EA)],
+  );
+
+  /// Gradiente header profilo — sage morbido.
+  static const profileGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFF1F5C3A), Color(0xFF0A4028)],
+  );
 
   // ── Theme ──────────────────────────────────────────────────────────────────
 
   static ThemeData get make {
     final scheme = ColorScheme.fromSeed(
-      seedColor: seed,
-      brightness: Brightness.dark,
-      primary: accent,
+      seedColor: primary,
+      brightness: Brightness.light,
+      primary: primary,
       secondary: sage,
       surface: surface1,
       onPrimary: Colors.white,
@@ -94,7 +122,7 @@ class LightTheme {
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: canvas,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
     );
 
     return base.copyWith(
@@ -107,7 +135,7 @@ class LightTheme {
           color: textPrimary,
         ),
         displaySmall: GoogleFonts.sora(
-          fontSize: 28,
+          fontSize: 26,
           fontWeight: FontWeight.w800,
           letterSpacing: -0.6,
           color: textPrimary,
@@ -127,6 +155,11 @@ class LightTheme {
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
+        titleSmall: GoogleFonts.sora(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: textPrimary,
+        ),
         bodyLarge: GoogleFonts.sora(
           fontSize: 15,
           fontWeight: FontWeight.w400,
@@ -138,6 +171,11 @@ class LightTheme {
           fontWeight: FontWeight.w400,
           color: textSecondary,
           height: 1.45,
+        ),
+        bodySmall: GoogleFonts.sora(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: textMuted,
         ),
         labelLarge: GoogleFonts.sora(
           fontSize: 14,
@@ -176,29 +214,28 @@ class LightTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: midGreen.withOpacity(0.18)),
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: border),
         ),
       ),
 
       // ── Divider ───────────────────────────────────────────────────────────
-      dividerTheme: DividerThemeData(
-        color: midGreen.withOpacity(0.16),
+      dividerTheme: const DividerThemeData(
+        color: border,
         thickness: 1,
       ),
 
       // ── SnackBar ──────────────────────────────────────────────────────────
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: surface2,
+        backgroundColor: primaryDark,
         contentTextStyle: GoogleFonts.sora(
-          color: textPrimary,
+          color: Colors.white,
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: midGreen.withOpacity(0.25)),
+          borderRadius: BorderRadius.circular(16),
         ),
       ),
 
@@ -206,14 +243,31 @@ class LightTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size.fromHeight(52),
-          backgroundColor: accent,
+          backgroundColor: primary,
           foregroundColor: Colors.white,
           textStyle: GoogleFonts.sora(
             fontSize: 15,
             fontWeight: FontWeight.w700,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+        ),
+      ),
+
+      // ── FilledButton ──────────────────────────────────────────────────────
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(52),
+          backgroundColor: primary,
+          foregroundColor: Colors.white,
+          textStyle: GoogleFonts.sora(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
           elevation: 0,
         ),
@@ -223,8 +277,8 @@ class LightTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(50),
-          foregroundColor: accent,
-          side: BorderSide(color: accent.withOpacity(0.35)),
+          foregroundColor: primary,
+          side: const BorderSide(color: border, width: 1.5),
           textStyle: GoogleFonts.sora(
             fontSize: 14,
             fontWeight: FontWeight.w700,
@@ -238,7 +292,7 @@ class LightTheme {
       // ── TextButton ────────────────────────────────────────────────────────
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: sage,
+          foregroundColor: primary,
           textStyle: GoogleFonts.sora(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -264,7 +318,7 @@ class LightTheme {
           fontSize: 13,
           fontWeight: FontWeight.w400,
         ),
-        prefixIconColor: sage,
+        prefixIconColor: primary,
         suffixIconColor: textSecondary,
         errorStyle: GoogleFonts.sora(
           color: danger,
@@ -276,23 +330,23 @@ class LightTheme {
           vertical: 18,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(color: midGreen.withOpacity(0.22)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(color: midGreen.withOpacity(0.22)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(color: accent, width: 1.8),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: primary, width: 1.8),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: danger, width: 1.4),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: danger, width: 1.8),
         ),
       ),

@@ -6,14 +6,20 @@ import 'package:plantly_app/cubits/forms/google_profile_completion_form_cubit.da
 import 'package:plantly_app/cubits/forms/sign_in_form_cubit.dart';
 import 'package:plantly_app/cubits/forms/sign_up_form_cubit.dart';
 import 'package:plantly_app/cubits/google_profile_completion/google_profile_completion_cubit.dart';
+import 'package:plantly_app/cubits/garden/garden_cubit.dart';
+import 'package:plantly_app/cubits/plant_details/plant_details_cubit.dart';
 import 'package:plantly_app/cubits/sign_in/sign_in_cubit.dart';
 import 'package:plantly_app/cubits/sign_up/sign_up_cubit.dart';
+import 'package:plantly_app/features/plant/plant_species.dart';
 import 'package:plantly_app/features/user/user.dart';
 import 'package:plantly_app/pages/google_profile_completion_page.dart';
 import 'package:plantly_app/pages/main_shell_page.dart';
+import 'package:plantly_app/pages/plant_detail_page.dart' hide GardenCubit;
 import 'package:plantly_app/pages/auth/sign_in_page.dart';
 import 'package:plantly_app/pages/auth/sign_up_page.dart';
 import 'package:plantly_app/pages/initial/splash_screen.dart';
+import 'package:plantly_app/repositories/garden_repository.dart';
+import 'package:plantly_app/repositories/plant_repository.dart';
 import 'package:plantly_app/repositories/user_repository.dart';
 
 import 'routes.dart';
@@ -61,6 +67,45 @@ class AppRouter {
       case Routes.home:
         return MaterialPageRoute(
           builder: (_) => const MainShellPage(),
+        );
+
+
+      case Routes.plantDetails:
+        final args = settings.arguments;
+        if (args is! PlantDetailsRouteArgs) {
+          return _buildFallbackRoute(settings);
+        }
+
+        return MaterialPageRoute(
+          builder: (ctx) {
+            final plantRepository = PlantRepository();
+            final gardenRepository = GardenRepository();
+
+            return MultiRepositoryProvider(
+              providers: [
+                RepositoryProvider.value(value: plantRepository),
+                RepositoryProvider.value(value: gardenRepository),
+              ],
+              child: MultiBlocProvider(
+                providers: [
+                  BlocProvider(
+                    create: (_) => PlantDetailsCubit(
+                      plantRepository: plantRepository,
+                    )..loadPlantDetails(args.plant),
+                  ),
+                  BlocProvider(
+                    create: (_) => GardenCubit(
+                      gardenRepository: gardenRepository,
+                    ),
+                  ),
+                ],
+                child: PlantDetailPage(
+                  initialPlant: args.plant,
+                  userId: args.userId,
+                ),
+              ),
+            );
+          },
         );
 
       case Routes.googleProfileCompletion:
@@ -118,4 +163,14 @@ class GoogleProfileCompletionRouteArgs {
 
   final fb.User firebaseUser;
   final PlantlyUser incompleteUser;
+}
+
+class PlantDetailsRouteArgs {
+  const PlantDetailsRouteArgs({
+    required this.plant,
+    required this.userId,
+  });
+
+  final PlantSpecies plant;
+  final String userId;
 }

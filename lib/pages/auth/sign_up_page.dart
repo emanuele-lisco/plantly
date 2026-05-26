@@ -5,6 +5,7 @@ import '../../cubits/custom/obscure/obscure_cubit.dart';
 import '../../cubits/forms/sign_up_form_cubit.dart';
 import '../../cubits/navigation/auth_flow_cubit.dart';
 import '../../cubits/sign_up/sign_up_cubit.dart';
+import '../../features/theme/models/theme.dart';
 import '../../widgets/auth/auth_card.dart';
 import '../../widgets/auth/auth_header.dart';
 import '../../widgets/auth/google_auth_button.dart';
@@ -17,6 +18,7 @@ class SignUpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: LightTheme.warmBackground,
       body: SafeArea(
         child: BlocListener<SignUpCubit, SignUpState>(
           listener: (context, state) {
@@ -50,6 +52,7 @@ class SignUpPage extends StatelessWidget {
                             AuthCard(
                               child: Column(
                                 children: [
+                                  // Username
                                   TextField(
                                     enabled: !loading,
                                     onChanged: context
@@ -59,14 +62,14 @@ class SignUpPage extends StatelessWidget {
                                       hintText: 'Username',
                                       label: const Text('Username'),
                                       prefixIcon: const Icon(
-                                        Icons.alternate_email_rounded,
-                                      ),
+                                          Icons.alternate_email_rounded),
                                       errorText: formState.showErrors
                                           ? formState.usernameError
                                           : null,
                                     ),
                                   ),
                                   const SizedBox(height: 14),
+                                  // Nome + Cognome
                                   Row(
                                     children: [
                                       Expanded(
@@ -79,8 +82,7 @@ class SignUpPage extends StatelessWidget {
                                             hintText: 'Nome',
                                             label: const Text('Nome'),
                                             prefixIcon: const Icon(
-                                              Icons.person_outline,
-                                            ),
+                                                Icons.person_outline),
                                             errorText: formState.showErrors
                                                 ? formState.nomeError
                                                 : null,
@@ -98,8 +100,7 @@ class SignUpPage extends StatelessWidget {
                                             hintText: 'Cognome',
                                             label: const Text('Cognome'),
                                             prefixIcon: const Icon(
-                                              Icons.person_outline,
-                                            ),
+                                                Icons.person_outline),
                                             errorText: formState.showErrors
                                                 ? formState.cognomeError
                                                 : null,
@@ -109,6 +110,7 @@ class SignUpPage extends StatelessWidget {
                                     ],
                                   ),
                                   const SizedBox(height: 14),
+                                  // Email
                                   TextField(
                                     enabled: !loading,
                                     keyboardType: TextInputType.emailAddress,
@@ -126,6 +128,7 @@ class SignUpPage extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(height: 14),
+                                  // Paese + Città
                                   Row(
                                     children: [
                                       Expanded(
@@ -138,8 +141,7 @@ class SignUpPage extends StatelessWidget {
                                             hintText: 'Paese',
                                             label: const Text('Paese'),
                                             prefixIcon: const Icon(
-                                              Icons.public_rounded,
-                                            ),
+                                                Icons.public_rounded),
                                             errorText: formState.showErrors
                                                 ? formState.countryError
                                                 : null,
@@ -157,8 +159,7 @@ class SignUpPage extends StatelessWidget {
                                             hintText: 'Città',
                                             label: const Text('Città'),
                                             prefixIcon: const Icon(
-                                              Icons.location_city_outlined,
-                                            ),
+                                                Icons.location_city_outlined),
                                             errorText: formState.showErrors
                                                 ? formState.cityError
                                                 : null,
@@ -168,11 +169,12 @@ class SignUpPage extends StatelessWidget {
                                     ],
                                   ),
                                   const SizedBox(height: 14),
+                                  // Password
                                   BlocBuilder<ObscureCubit, ObscureState>(
-                                    builder: (context, obscureState) {
+                                    builder: (context, obs) {
                                       return TextField(
                                         enabled: !loading,
-                                        obscureText: obscureState.password,
+                                        obscureText: obs.password,
                                         onChanged: context
                                             .read<SignUpFormCubit>()
                                             .updatePassword,
@@ -186,11 +188,12 @@ class SignUpPage extends StatelessWidget {
                                                 .read<ObscureCubit>()
                                                 .togglePassword(),
                                             icon: Icon(
-                                              obscureState.password
-                                                  ? Icons.visibility_off_outlined
+                                              obs.password
+                                                  ? Icons
+                                                  .visibility_off_outlined
                                                   : Icons.visibility_outlined,
                                               size: 20,
-                                              color: Colors.black54,
+                                              color: LightTheme.textSecondary,
                                             ),
                                           ),
                                           errorText: formState.showErrors
@@ -201,20 +204,19 @@ class SignUpPage extends StatelessWidget {
                                     },
                                   ),
                                   const SizedBox(height: 14),
+                                  // Conferma password
                                   BlocBuilder<ObscureCubit, ObscureState>(
-                                    builder: (context, obscureState) {
+                                    builder: (context, obs) {
                                       return TextField(
                                         enabled: !loading,
-                                        obscureText:
-                                        obscureState.confirmPassword,
+                                        obscureText: obs.confirmPassword,
                                         onChanged: context
                                             .read<SignUpFormCubit>()
                                             .updateConfirmPassword,
                                         decoration: InputDecoration(
                                           hintText: 'Conferma Password',
-                                          label: const Text(
-                                            'Conferma Password',
-                                          ),
+                                          label:
+                                          const Text('Conferma Password'),
                                           prefixIcon:
                                           const Icon(Icons.lock_outline),
                                           suffixIcon: IconButton(
@@ -222,11 +224,12 @@ class SignUpPage extends StatelessWidget {
                                                 .read<ObscureCubit>()
                                                 .toggleConfirmPassword(),
                                             icon: Icon(
-                                              obscureState.confirmPassword
-                                                  ? Icons.visibility_off_outlined
+                                              obs.confirmPassword
+                                                  ? Icons
+                                                  .visibility_off_outlined
                                                   : Icons.visibility_outlined,
                                               size: 20,
-                                              color: Colors.black54,
+                                              color: LightTheme.textSecondary,
                                             ),
                                           ),
                                           errorText: formState.showErrors
@@ -241,15 +244,18 @@ class SignUpPage extends StatelessWidget {
                                     strength: formState.passwordStrength,
                                   ),
                                   const SizedBox(height: 22),
+                                  // CTA
                                   SizedBox(
                                     width: double.infinity,
                                     child: loading
                                         ? const Center(
                                       child: Padding(
                                         padding: EdgeInsets.symmetric(
-                                          vertical: 12,
+                                            vertical: 12),
+                                        child: CircularProgressIndicator(
+                                          color: LightTheme.primary,
+                                          strokeWidth: 2.5,
                                         ),
-                                        child: CircularProgressIndicator(),
                                       ),
                                     )
                                         : ElevatedButton.icon(
@@ -257,8 +263,7 @@ class SignUpPage extends StatelessWidget {
                                           .read<SignUpFormCubit>()
                                           .submit(),
                                       icon: const Icon(Icons.spa_rounded),
-                                      label:
-                                      const Text('Crea account'),
+                                      label: const Text('Crea account'),
                                     ),
                                   ),
                                   const SizedBox(height: 14),
@@ -272,8 +277,7 @@ class SignUpPage extends StatelessWidget {
                                         .signUpWithGoogle(),
                                   ),
                                   const SizedBox(height: 14),
-                                  SizedBox(
-                                    width: double.infinity,
+                                  Center(
                                     child: TextButton.icon(
                                       onPressed: loading
                                           ? null
@@ -282,7 +286,7 @@ class SignUpPage extends StatelessWidget {
                                           .goToSignIn(),
                                       icon: const Icon(
                                         Icons.arrow_back_rounded,
-                                        size: 18,
+                                        size: 16,
                                       ),
                                       label: const Text(
                                         'Hai già un account? Accedi',

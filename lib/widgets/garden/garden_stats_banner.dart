@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 
-/// Banner statistiche giardino — sostituisce GardenOrbPreview.
-///
-/// Mostra un riepilogo visivo compatto dello stato generale.
-/// Dati statici → pronti per GardenCubit.
 class GardenStatsBanner extends StatelessWidget {
   const GardenStatsBanner({
     super.key,
@@ -19,28 +15,19 @@ class GardenStatsBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final t = Theme.of(context).textTheme;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF122A1C),
-            Color(0xFF0D2215),
-          ],
-        ),
-        border: Border.all(
-          color: LightTheme.midGreen.withOpacity(0.3),
-        ),
+        color: LightTheme.surface2,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: LightTheme.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -51,17 +38,25 @@ class GardenStatsBanner extends StatelessWidget {
             children: [
               Text(
                 'Vista d\'insieme',
-                style: textTheme.titleMedium?.copyWith(
+                style: t.titleMedium?.copyWith(
                   color: LightTheme.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const Spacer(),
-              Text(
-                'Oggi',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: LightTheme.textSecondary,
-                  fontSize: 12,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: LightTheme.primary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  'Oggi',
+                  style: t.bodyMedium?.copyWith(
+                    color: LightTheme.primary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
@@ -74,27 +69,19 @@ class GardenStatsBanner extends StatelessWidget {
                   icon: Icons.favorite_rounded,
                   label: 'Salute media',
                   value: '$healthAvg%',
-                  color: LightTheme.accent,
+                  color: LightTheme.success,
                 ),
               ),
-              Container(
-                width: 1,
-                height: 52,
-                color: LightTheme.midGreen.withOpacity(0.2),
-              ),
+              Container(width: 1, height: 52, color: LightTheme.border),
               Expanded(
                 child: _StatBlock(
                   icon: Icons.water_drop_rounded,
                   label: 'Da annaffiare',
                   value: wateringDue.toString(),
-                  color: const Color(0xFF4FC3F7),
+                  color: LightTheme.water,
                 ),
               ),
-              Container(
-                width: 1,
-                height: 52,
-                color: LightTheme.midGreen.withOpacity(0.2),
-              ),
+              Container(width: 1, height: 52, color: LightTheme.border),
               Expanded(
                 child: _StatBlock(
                   icon: Icons.wb_sunny_rounded,
@@ -106,43 +93,36 @@ class GardenStatsBanner extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          // Health bar
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Row(
-                children: [
-                  Text(
-                    'Salute giardino',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: LightTheme.textSecondary,
-                      fontSize: 11,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '$healthAvg%',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: LightTheme.accent,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
+              Text(
+                'Salute giardino',
+                style: t.bodyMedium?.copyWith(
+                  color: LightTheme.textSecondary,
+                  fontSize: 11,
+                ),
               ),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: healthAvg / 100,
-                  backgroundColor: LightTheme.midGreen.withOpacity(0.2),
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    LightTheme.accent,
-                  ),
-                  minHeight: 6,
+              const Spacer(),
+              Text(
+                '$healthAvg%',
+                style: t.bodyMedium?.copyWith(
+                  color: LightTheme.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: healthAvg / 100,
+              backgroundColor: LightTheme.border,
+              valueColor:
+              const AlwaysStoppedAnimation<Color>(LightTheme.primary),
+              minHeight: 6,
+            ),
           ),
         ],
       ),
@@ -165,15 +145,14 @@ class _StatBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
+    final t = Theme.of(context).textTheme;
     return Column(
       children: [
         Icon(icon, color: color, size: 20),
         const SizedBox(height: 6),
         Text(
           value,
-          style: textTheme.titleLarge?.copyWith(
+          style: t.titleLarge?.copyWith(
             color: LightTheme.textPrimary,
             fontWeight: FontWeight.w800,
             fontSize: 18,
@@ -181,7 +160,7 @@ class _StatBlock extends StatelessWidget {
         ),
         Text(
           label,
-          style: textTheme.bodyMedium?.copyWith(
+          style: t.bodyMedium?.copyWith(
             color: LightTheme.textSecondary,
             fontSize: 10,
           ),

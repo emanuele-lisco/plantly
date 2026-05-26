@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 
-/// Header profilo utente — dark botanical premium.
-///
-/// Separato dal ProfilePage per mantenere la pagina leggera.
+/// Header profilo utente — light botanical, sfondo chiaro.
 class ProfileHeaderWidget extends StatelessWidget {
   const ProfileHeaderWidget({
     super.key,
@@ -22,127 +20,147 @@ class ProfileHeaderWidget extends StatelessWidget {
   final String? bio;
   final String? imageUrl;
 
+  static double expandedHeight(String? bio) =>
+      (bio != null && bio.trim().isNotEmpty) ? 290 : 250;
+
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final t = Theme.of(context).textTheme;
+    final subtitle = [
+      if (handle.isNotEmpty) handle,
+      if (location.isNotEmpty) location,
+    ].join(' · ');
 
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
-        child: Column(
-          children: [
-            // ── Avatar ──────────────────────────────────────────────
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: 96,
-                  height: 96,
+    return Container(
+      width: double.infinity,
+      color: LightTheme.canvas,
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Avatar ────────────────────────────────────────────────────
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: LightTheme.sage.withOpacity(0.2),
+                  border: Border.all(
+                    color: LightTheme.border,
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.07),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: imageUrl != null && imageUrl!.isNotEmpty
+                      ? Image.network(
+                    imageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        _InitialsFallback(initials: initials),
+                  )
+                      : _InitialsFallback(initials: initials),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  width: 26,
+                  height: 26,
                   decoration: BoxDecoration(
+                    color: LightTheme.surface2,
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        LightTheme.accent,
-                        LightTheme.midGreen,
-                      ],
-                    ),
-                    border: Border.all(
-                      color: LightTheme.accent.withOpacity(0.35),
-                      width: 3,
-                    ),
+                    border: Border.all(color: LightTheme.border, width: 1.5),
                     boxShadow: [
                       BoxShadow(
-                        color: LightTheme.accent.withOpacity(0.3),
-                        blurRadius: 28,
-                        offset: const Offset(0, 12),
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: Center(
-                    child: imageUrl != null
-                        ? CircleAvatar(
-                            radius: 48,
-                            backgroundImage: NetworkImage(imageUrl!),
-                            backgroundColor: Colors.transparent,
-                          )
-                        : Text(
-                            initials,
-                            style: textTheme.headlineMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
+                  child: const Icon(
+                    Icons.edit_rounded,
+                    size: 12,
+                    color: LightTheme.primary,
                   ),
                 ),
-                // Badge edit
-                Positioned(
-                  bottom: 2,
-                  right: 2,
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: LightTheme.surface2,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: LightTheme.midGreen.withOpacity(0.4),
-                        width: 2,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.edit_rounded,
-                      size: 13,
-                      color: LightTheme.accent,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 18),
-
-            // ── Nome ─────────────────────────────────────────────────
-            Text(
-              displayName,
-              style: textTheme.headlineMedium?.copyWith(
-                color: LightTheme.textPrimary,
-                fontWeight: FontWeight.w800,
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: 5),
-
-            // ── Handle + location ──────────────────────────────────
-            Text(
-              [
-                if (handle.isNotEmpty) handle,
-                if (location.isNotEmpty) location,
-              ].join(' · '),
-              style: textTheme.bodyMedium?.copyWith(
-                color: LightTheme.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-            // ── Bio ───────────────────────────────────────────────
-            if (bio != null && bio!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                bio!,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: LightTheme.textSecondary.withOpacity(0.8),
-                  height: 1.55,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
+          ),
+
+          const SizedBox(height: 14),
+
+          // ── Nome ──────────────────────────────────────────────────────
+          Text(
+            displayName,
+            style: t.titleLarge?.copyWith(
+              color: LightTheme.textPrimary,
+              fontWeight: FontWeight.w700,
+              fontSize: 20,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(height: 5),
+            Text(
+              subtitle,
+              style: t.bodyMedium?.copyWith(
+                color: LightTheme.textSecondary,
+                fontSize: 13,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
+
+          // ── Bio ───────────────────────────────────────────────────────
+          if (bio != null && bio!.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              bio!,
+              style: t.bodyMedium?.copyWith(
+                color: LightTheme.textMuted,
+                height: 1.5,
+                fontSize: 13,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _InitialsFallback extends StatelessWidget {
+  const _InitialsFallback({required this.initials});
+  final String initials;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        initials,
+        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+          color: LightTheme.primary,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

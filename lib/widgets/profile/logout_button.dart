@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
+import 'package:flutter/material.dart';
+import 'package:plantly_app/features/theme/models/theme.dart';
 
-/// Pulsante di logout — dark botanical.
 class LogoutButton extends StatelessWidget {
   const LogoutButton({
     super.key,
@@ -21,40 +22,40 @@ class LogoutButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: LightTheme.danger.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(18),
+          color: LightTheme.danger.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: LightTheme.danger.withOpacity(0.25),
+            color: LightTheme.danger.withOpacity(0.2),
           ),
         ),
         child: Center(
           child: loading
               ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: LightTheme.danger,
-                  ),
-                )
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: LightTheme.danger,
+            ),
+          )
               : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.logout_rounded,
-                      size: 18,
-                      color: LightTheme.danger,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Esci dall\'account',
-                      style: textTheme.titleMedium?.copyWith(
-                        color: LightTheme.danger,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.logout_rounded,
+                size: 18,
+                color: LightTheme.danger,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Esci dall\'account',
+                style: textTheme.titleMedium?.copyWith(
+                  color: LightTheme.danger,
+                  fontWeight: FontWeight.w700,
                 ),
+              ),
+            ],
+          ),
         ),
       ),
     );

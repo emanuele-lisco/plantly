@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 
-/// Saluto iniziale nella Home — stile dark botanical.
-///
-/// In futuro può ricevere il nome utente reale dal ProfileCubit / AuthBloc.
 class HomeGreetingWidget extends StatelessWidget {
   const HomeGreetingWidget({
     super.key,
@@ -16,7 +13,7 @@ class HomeGreetingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final t = Theme.of(context).textTheme;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -27,7 +24,7 @@ class HomeGreetingWidget extends StatelessWidget {
             children: [
               Text(
                 greeting,
-                style: textTheme.bodyLarge?.copyWith(
+                style: t.bodyLarge?.copyWith(
                   color: LightTheme.textSecondary,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0.2,
@@ -36,28 +33,29 @@ class HomeGreetingWidget extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: textTheme.displaySmall?.copyWith(
-                  color: LightTheme.textPrimary,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: t.displaySmall?.copyWith(color: LightTheme.textPrimary),
               ),
             ],
           ),
         ),
-        // Notification bell
         Container(
           width: 44,
           height: 44,
           decoration: BoxDecoration(
             color: LightTheme.surface2,
             shape: BoxShape.circle,
-            border: Border.all(
-              color: LightTheme.midGreen.withOpacity(0.3),
-            ),
+            border: Border.all(color: LightTheme.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Stack(
             children: [
-              Center(
+              const Center(
                 child: Icon(
                   Icons.notifications_outlined,
                   color: LightTheme.textSecondary,
@@ -71,7 +69,7 @@ class HomeGreetingWidget extends StatelessWidget {
                   width: 8,
                   height: 8,
                   decoration: const BoxDecoration(
-                    color: LightTheme.accent,
+                    color: LightTheme.coral,
                     shape: BoxShape.circle,
                   ),
                 ),

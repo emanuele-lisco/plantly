@@ -1,37 +1,40 @@
 import 'package:flutter/material.dart';
 import '../../features/theme/models/theme.dart';
 
+
 class InfoUser extends StatelessWidget {
   const InfoUser({
     super.key,
     required this.icon,
     required this.label,
     required this.value,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              color: LightTheme.midGreen.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10),
+              color: LightTheme.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               icon,
               size: 17,
-              color: LightTheme.sage,
+              color: LightTheme.primary,
             ),
           ),
           const SizedBox(width: 14),
@@ -58,7 +61,7 @@ class InfoUser extends StatelessWidget {
               ],
             ),
           ),
-          Icon(
+          const Icon(
             Icons.chevron_right_rounded,
             size: 18,
             color: LightTheme.textMuted,
@@ -66,5 +69,15 @@ class InfoUser extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: row,
+      );
+    }
+
+    return row;
   }
 }

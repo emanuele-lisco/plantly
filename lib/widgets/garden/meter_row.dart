@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 
-/// Riga con label, barra di progresso e valore — dark botanical.
-///
-/// Usata nella PlantCard per Umidità e Luce.
 class MeterRow extends StatelessWidget {
-  const MeterRow({
-    super.key,
-    required this.label,
-    required this.value,
-  });
+  const MeterRow({super.key, required this.label, required this.value});
 
   final String label;
-  final int value; // 0–100
+  final int value;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final t = Theme.of(context).textTheme;
     final color = _meterColor(value);
 
     return Row(
@@ -25,7 +18,7 @@ class MeterRow extends StatelessWidget {
           width: 58,
           child: Text(
             label,
-            style: textTheme.bodyMedium?.copyWith(
+            style: t.bodyMedium?.copyWith(
               color: LightTheme.textSecondary,
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -38,16 +31,16 @@ class MeterRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
               value: value / 100,
-              backgroundColor: LightTheme.midGreen.withOpacity(0.18),
+              backgroundColor: LightTheme.border,
               valueColor: AlwaysStoppedAnimation<Color>(color),
-              minHeight: 5,
+              minHeight: 6,
             ),
           ),
         ),
         const SizedBox(width: 10),
         Text(
           '$value%',
-          style: textTheme.bodyMedium?.copyWith(
+          style: t.bodyMedium?.copyWith(
             color: color,
             fontWeight: FontWeight.w700,
             fontSize: 11,
@@ -58,7 +51,7 @@ class MeterRow extends StatelessWidget {
   }
 
   Color _meterColor(int v) {
-    if (v >= 75) return LightTheme.accent;
+    if (v >= 75) return LightTheme.success;
     if (v >= 45) return LightTheme.amber;
     return LightTheme.danger;
   }

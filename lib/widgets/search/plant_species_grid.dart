@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:plantly_app/cubits/plant_search/plant_search_cubit.dart';
+import 'package:plantly_app/cubits/plant_search/plant_search_state.dart';
 import 'package:plantly_app/features/plant/plant_species.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 import 'package:plantly_app/widgets/search/plant_species_card.dart';
 
-/// Griglia risultati ricerca piante.
-///
 class PlantSpeciesGrid extends StatefulWidget {
   const PlantSpeciesGrid({
     super.key,
@@ -52,13 +51,11 @@ class _PlantSpeciesGridState extends State<PlantSpeciesGrid> {
           PlantSearchLoading() => _buildLoading(),
           PlantSearchEmpty() => _buildEmpty(state.query),
           PlantSearchFailure() => _buildError(state.message),
-          PlantSearchLoaded() => _buildGrid(state),
+          PlantSearchSuccess() => _buildGrid(state),
         };
       },
     );
   }
-
-  // ── Loading ───────────────────────────────────────────────────────────────
 
   Widget _buildLoading() {
     return GridView.builder(
@@ -68,14 +65,12 @@ class _PlantSpeciesGridState extends State<PlantSpeciesGrid> {
         crossAxisCount: 2,
         mainAxisSpacing: 14,
         crossAxisSpacing: 14,
-        childAspectRatio: 0.72,
+        childAspectRatio: 0.68,
       ),
       itemCount: 6,
       itemBuilder: (_, __) => const _SkeletonCard(),
     );
   }
-
-  // ── Empty ─────────────────────────────────────────────────────────────────
 
   Widget _buildEmpty(String query) {
     final textTheme = Theme.of(context).textTheme;
@@ -122,8 +117,6 @@ class _PlantSpeciesGridState extends State<PlantSpeciesGrid> {
     );
   }
 
-  // ── Error ─────────────────────────────────────────────────────────────────
-
   Widget _buildError(String message) {
     final textTheme = Theme.of(context).textTheme;
 
@@ -168,15 +161,12 @@ class _PlantSpeciesGridState extends State<PlantSpeciesGrid> {
     );
   }
 
-  // ── Grid ──────────────────────────────────────────────────────────────────
-
-  Widget _buildGrid(PlantSearchLoaded state) {
+  Widget _buildGrid(PlantSearchSuccess state) {
     final textTheme = Theme.of(context).textTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Risultati header
         Row(
           children: [
             Text(
@@ -197,9 +187,7 @@ class _PlantSpeciesGridState extends State<PlantSpeciesGrid> {
               ),
           ],
         ),
-
         const SizedBox(height: 14),
-
         GridView.builder(
           controller: _scrollController,
           shrinkWrap: true,
@@ -208,7 +196,7 @@ class _PlantSpeciesGridState extends State<PlantSpeciesGrid> {
             crossAxisCount: 2,
             mainAxisSpacing: 14,
             crossAxisSpacing: 14,
-            childAspectRatio: 0.72,
+            childAspectRatio: 0.68,
           ),
           itemCount: state.plants.length,
           itemBuilder: (_, i) => PlantSpeciesCard(
@@ -216,8 +204,6 @@ class _PlantSpeciesGridState extends State<PlantSpeciesGrid> {
             onTap: () => widget.onPlantTap(state.plants[i]),
           ),
         ),
-
-        // Load more indicator
         if (state.hasMore && !state.isLoadingMore) ...[
           const SizedBox(height: 16),
           Center(
@@ -233,8 +219,6 @@ class _PlantSpeciesGridState extends State<PlantSpeciesGrid> {
     );
   }
 }
-
-// ── Skeleton Card ─────────────────────────────────────────────────────────────
 
 class _SkeletonCard extends StatefulWidget {
   const _SkeletonCard();
@@ -281,7 +265,6 @@ class _SkeletonCardState extends State<_SkeletonCard>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Image placeholder
               AspectRatio(
                 aspectRatio: 1,
                 child: Container(
@@ -294,7 +277,7 @@ class _SkeletonCardState extends State<_SkeletonCard>
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -306,7 +289,7 @@ class _SkeletonCardState extends State<_SkeletonCard>
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 5),
                     Container(
                       height: 10,
                       width: 80,
@@ -315,10 +298,10 @@ class _SkeletonCardState extends State<_SkeletonCard>
                         borderRadius: BorderRadius.circular(5),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Container(
-                      height: 22,
-                      width: 60,
+                      height: 20,
+                      width: 56,
                       decoration: BoxDecoration(
                         color: LightTheme.surface3.withOpacity(opacity * 0.5),
                         borderRadius: BorderRadius.circular(8),

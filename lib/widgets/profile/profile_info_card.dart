@@ -13,7 +13,7 @@ class ProfileInfoItem {
   final String value;
 }
 
-/// Card informazioni profilo — dark botanical.
+/// Card informazioni profilo — light botanical.
 class ProfileInfoCard extends StatelessWidget {
   const ProfileInfoCard({super.key, required this.items});
 
@@ -23,21 +23,26 @@ class ProfileInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: LightTheme.surface1,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: LightTheme.midGreen.withOpacity(0.22),
-        ),
+        color: LightTheme.surface2,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: LightTheme.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
           for (int i = 0; i < items.length; i++) ...[
             _InfoRow(item: items[i]),
             if (i < items.length - 1)
-              Divider(
+              const Divider(
                 height: 1,
                 thickness: 1,
-                color: LightTheme.midGreen.withOpacity(0.15),
+                color: LightTheme.border,
                 indent: 16,
                 endIndent: 16,
               ),
@@ -65,10 +70,10 @@ class _InfoRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: LightTheme.midGreen.withOpacity(0.2),
+              color: LightTheme.primary.withOpacity(0.08),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(item.icon, size: 17, color: LightTheme.sage),
+            child: Icon(item.icon, size: 17, color: LightTheme.primary),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -93,7 +98,7 @@ class _InfoRow extends StatelessWidget {
               ],
             ),
           ),
-          Icon(
+          const Icon(
             Icons.chevron_right_rounded,
             size: 18,
             color: LightTheme.textMuted,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 
-/// Header con logo, titolo e sottotitolo per le schermate auth — dark botanical.
+/// Header auth — logo su sfondo chiaro, verde botanico come accento.
 class AuthHeader extends StatelessWidget {
   const AuthHeader({super.key, required this.subtitle});
 
@@ -9,34 +9,31 @@ class AuthHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final t = Theme.of(context).textTheme;
 
     return Column(
       children: [
+        // ── Logo ────────────────────────────────────────────────────────
         Container(
-          padding: const EdgeInsets.all(5),
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(20),
             color: LightTheme.surface2,
-            border: Border.all(
-              color: LightTheme.midGreen.withOpacity(0.4),
-              width: 2,
-            ),
+            border: Border.all(color: LightTheme.border, width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: LightTheme.accent.withOpacity(0.15),
-                blurRadius: 22,
-                spreadRadius: 2,
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(16),
             child: Image.asset(
               'assets/icon/plantly_logo.png',
-              width: 80,
-              height: 80,
+              width: 76,
+              height: 76,
               fit: BoxFit.cover,
             ),
           ),
@@ -44,33 +41,31 @@ class AuthHeader extends StatelessWidget {
 
         const SizedBox(height: 20),
 
-        // Wordmark
+        // ── Wordmark ─────────────────────────────────────────────────────
         Text(
           'Plantly',
-          style: textTheme.displaySmall?.copyWith(
-            fontWeight: FontWeight.w800,
+          style: t.displaySmall?.copyWith(
             color: LightTheme.textPrimary,
+            fontWeight: FontWeight.w800,
             letterSpacing: -0.5,
           ),
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
 
-        // Sottotitolo pill
+        // ── Sottotitolo pill ──────────────────────────────────────────────
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: LightTheme.accent.withOpacity(0.1),
+            color: LightTheme.primary.withOpacity(0.08),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: LightTheme.accent.withOpacity(0.2),
-            ),
+            border: Border.all(color: LightTheme.primary.withOpacity(0.2)),
           ),
           child: Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: textTheme.bodyMedium?.copyWith(
-              color: LightTheme.sage,
+            style: t.bodyMedium?.copyWith(
+              color: LightTheme.primary,
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),

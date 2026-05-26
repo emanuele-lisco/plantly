@@ -4,4 +4,5 @@ class Routes {
   static const signUp = '/sign-up';
   static const home = '/home';
   static const googleProfileCompletion = '/google-profile-completion';
+  static const plantDetails = '/plant-details';
 }

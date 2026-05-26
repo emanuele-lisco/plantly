@@ -1,96 +1,93 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:plantly_app/repositories/plant_species_repository.dart';
+import 'package:translator/translator.dart';
 
-import '../../features/plant/plant_species.dart';
-
-part 'plant_search_state.dart';
+import '../../repositories/plant_repository.dart';
+import 'plant_search_state.dart';
 
 class PlantSearchCubit extends Cubit<PlantSearchState> {
-  PlantSearchCubit({required PlantSpeciesRepository plantSpeciesRepository})
-      : _plantSpeciesRepository = plantSpeciesRepository,
+  PlantSearchCubit({required PlantRepository plantRepository})
+      : _plantRepository = plantRepository,
+        _translator = GoogleTranslator(),
         super(const PlantSearchInitial());
 
-  final PlantSpeciesRepository _plantSpeciesRepository;
+  final PlantRepository _plantRepository;
+  final GoogleTranslator _translator;
+  int _requestId = 0;
 
   Future<void> searchPlants(String query) async {
-    final trimmedQuery = query.trim();
+    final displayQuery = query.trim();
 
-    if (trimmedQuery.isEmpty) {
+    if (displayQuery.isEmpty) {
       emit(const PlantSearchInitial());
       return;
     }
 
-    emit(PlantSearchLoading(query: trimmedQuery));
+    final currentRequestId = ++_requestId;
+    emit(PlantSearchLoading(query: displayQuery, apiQuery: displayQuery));
 
     try {
-      final result = await _plantSpeciesRepository.searchPlants(
-        query: trimmedQuery,
-      );
+      final apiQuery = await _translateQueryForApi(displayQuery);
+      if (currentRequestId != _requestId) return;
 
-      if (result.plants.isEmpty) {
-        emit(PlantSearchEmpty(query: trimmedQuery));
-        return;
+      final plants = await _plantRepository.searchPlants(apiQuery);
+      if (currentRequestId != _requestId) return;
+
+      if (plants.isEmpty) {
+        emit(PlantSearchEmpty(query: displayQuery, apiQuery: apiQuery));
+      } else {
+        emit(
+          PlantSearchSuccess(
+            query: displayQuery,
+            apiQuery: apiQuery,
+            plants: plants,
+          ),
+        );
       }
-
-      emit(
-        PlantSearchLoaded(
-          query: trimmedQuery,
-          plants: result.plants,
-          currentPage: result.currentPage,
-          hasMore: result.hasMore,
-        ),
-      );
-    } on PlantSpeciesRepositoryException catch (e) {
-      emit(PlantSearchFailure(message: e.message, query: trimmedQuery));
-    } catch (_) {
+    } on PlantRepositoryException catch (e) {
+      if (currentRequestId != _requestId) return;
       emit(
         PlantSearchFailure(
-          message: 'Errore imprevisto durante la ricerca delle piante',
-          query: trimmedQuery,
+          message: e.message,
+          query: displayQuery,
+          apiQuery: displayQuery,
+        ),
+      );
+    } catch (_) {
+      if (currentRequestId != _requestId) return;
+      emit(
+        PlantSearchFailure(
+          message: 'Errore imprevisto durante la ricerca delle piante.',
+          query: displayQuery,
+          apiQuery: displayQuery,
         ),
       );
     }
   }
 
   Future<void> loadMore() async {
-    final currentState = state;
-
-    if (currentState is! PlantSearchLoaded) return;
-    if (!currentState.hasMore || currentState.isLoadingMore) return;
-
-    emit(currentState.copyWith(isLoadingMore: true));
-
-    try {
-      final result = await _plantSpeciesRepository.searchPlants(
-        query: currentState.query,
-        page: currentState.currentPage + 1,
-      );
-
-      emit(
-        currentState.copyWith(
-          plants: [
-            ...currentState.plants,
-            ...result.plants,
-          ],
-          currentPage: result.currentPage,
-          hasMore: result.hasMore,
-          isLoadingMore: false,
-        ),
-      );
-    } on PlantSpeciesRepositoryException catch (e) {
-      emit(PlantSearchFailure(message: e.message, query: currentState.query));
-    } catch (_) {
-      emit(
-        PlantSearchFailure(
-          message: 'Errore imprevisto durante il caricamento di altre piante',
-          query: currentState.query,
-        ),
-      );
-    }
+    // La vertical slice usa una ricerca semplice senza paginazione.
+    // Il metodo resta per compatibilità con vecchi widget non ancora rimossi.
   }
 
   void clearSearch() {
+    _requestId++;
     emit(const PlantSearchInitial());
+  }
+
+  Future<String> _translateQueryForApi(String query) async {
+    final normalized = query.trim();
+    if (normalized.isEmpty) return normalized;
+
+    try {
+      final translation = await _translator.translate(
+        normalized,
+        from: 'it',
+        to: 'en',
+      );
+      final translated = translation.text.trim();
+      return translated.isEmpty ? normalized : translated;
+    } catch (_) {
+      return normalized;
+    }
   }
 }

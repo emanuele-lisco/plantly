@@ -3,10 +3,6 @@ import 'package:plantly_app/features/plant/plant_species.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 import 'package:plantly_app/widgets/search/plant_info_badge.dart';
 
-/// Card singola pianta per la griglia di ricerca.
-///
-/// Mostra immagine, nome comune, nome scientifico e badge semantici.
-/// Il tap delega all'[onTap] fornito dalla pagina (che gestirà la navigazione).
 class PlantSpeciesCard extends StatelessWidget {
   const PlantSpeciesCard({
     super.key,
@@ -41,20 +37,17 @@ class PlantSpeciesCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Immagine ──────────────────────────────────────────────
             ClipRRect(
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(22),
               ),
               child: AspectRatio(
                 aspectRatio: 1,
-                child: _PlantImage(imageUrl: plant.imageUrl),
+                child: _PlantImage(imageUrl: plant.heroImageUrl),
               ),
             ),
-
-            // ── Contenuto testuale ─────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -65,8 +58,9 @@ class PlantSpeciesCard extends StatelessWidget {
                     style: textTheme.titleMedium?.copyWith(
                       color: LightTheme.textPrimary,
                       fontSize: 13,
+                      height: 1.1,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
@@ -75,6 +69,7 @@ class PlantSpeciesCard extends StatelessWidget {
                     style: textTheme.labelSmall?.copyWith(
                       color: LightTheme.textSecondary,
                       fontStyle: FontStyle.italic,
+                      height: 1.1,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -82,13 +77,11 @@ class PlantSpeciesCard extends StatelessWidget {
                 ],
               ),
             ),
-
-            // ── Badge semantici ────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
+              padding: const EdgeInsets.fromLTRB(12, 2, 12, 10),
               child: Wrap(
-                spacing: 5,
-                runSpacing: 5,
+                spacing: 4,
+                runSpacing: 4,
                 children: _buildBadges(plant),
               ),
             ),
@@ -99,18 +92,14 @@ class PlantSpeciesCard extends StatelessWidget {
   }
 
   List<Widget> _buildBadges(PlantSpecies p) {
-    final badges = <Widget>[];
+    final badges = <Widget>[
+      if (plant.indoor != null)
+        PlantInfoBadge(
+          type: plant.indoor! ? PlantBadgeType.indoor : PlantBadgeType.outdoor,
+          label: plant.indoor! ? 'Indoor' : 'Outdoor',
+        ),
+    ];
 
-    // Indoor / Outdoor
-    badges.add(
-      PlantInfoBadge(
-        type: p.indoor ? PlantBadgeType.indoor : PlantBadgeType.outdoor,
-        label: p.indoor ? 'Indoor' : 'Outdoor',
-        compact: true,
-      ),
-    );
-
-    // Watering — mostra solo se non vuoto
     if (p.watering.isNotEmpty) {
       badges.add(
         PlantInfoBadge(
@@ -121,7 +110,6 @@ class PlantSpeciesCard extends StatelessWidget {
       );
     }
 
-    // Poisonous warning — solo se velenoso
     if (p.poisonousToHumans || p.poisonousToPets) {
       badges.add(
         const PlantInfoBadge(
@@ -146,13 +134,10 @@ class PlantSpeciesCard extends StatelessWidget {
       case 'none':
         return 'Nessuna';
       default:
-      // Capitalizza la prima lettera se non riconosciuto
         return w.length > 8 ? '${w.substring(0, 7)}…' : w;
     }
   }
 }
-
-// ── Immagine con fallback ─────────────────────────────────────────────────────
 
 class _PlantImage extends StatelessWidget {
   const _PlantImage({required this.imageUrl});
@@ -183,8 +168,7 @@ class _PlantImage extends StatelessWidget {
           height: 24,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            valueColor:
-            AlwaysStoppedAnimation<Color>(LightTheme.sage),
+            valueColor: AlwaysStoppedAnimation<Color>(LightTheme.sage),
           ),
         ),
       ),

@@ -13,11 +13,8 @@ class _NavItem extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  // Accent verde brillante per lo stato attivo.
-  static const _activeColor = LightTheme.accent;
-
-  // Idle: grigio chiaro caldo — leggibile su surface2 scuro, NON verde.
-  static const _idleColor = LightTheme.textSecondary;
+  static const _activeColor = LightTheme.primary;
+  static const _idleColor = LightTheme.textMuted;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +22,7 @@ class _NavItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
-        splashColor: LightTheme.accent.withOpacity(0.08),
+        splashColor: LightTheme.primary.withOpacity(0.08),
         highlightColor: Colors.transparent,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -33,20 +30,19 @@ class _NavItem extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
             color: selected
-                ? LightTheme.accent.withOpacity(0.1)
+                ? LightTheme.primary.withOpacity(0.09)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Icona con pill di sfondo quando attiva
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.all(selected ? 5 : 0),
                 decoration: BoxDecoration(
                   color: selected
-                      ? _activeColor.withOpacity(0.14)
+                      ? _activeColor.withOpacity(0.12)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -62,7 +58,7 @@ class _NavItem extends StatelessWidget {
                 style: TextStyle(
                   color: selected ? _activeColor : _idleColor,
                   fontWeight:
-                      selected ? FontWeight.w700 : FontWeight.w400,
+                  selected ? FontWeight.w700 : FontWeight.w400,
                   fontSize: 11,
                   fontFamily: 'Sora',
                 ),

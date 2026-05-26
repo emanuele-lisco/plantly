@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 
-/// Hero card principale nella Home — botanical immersive.
-///
-/// Mostra il riepilogo stato del giardino con impatto visivo forte.
-/// Parametri esposti per futura connessione a GardenSummaryCubit.
 class HomeHeroCard extends StatelessWidget {
   const HomeHeroCard({
     super.key,
@@ -21,37 +17,24 @@ class HomeHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final t = Theme.of(context).textTheme;
 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF12522E),
-            Color(0xFF0A3A20),
-            Color(0xFF071E13),
-          ],
-          stops: [0.0, 0.55, 1.0],
-        ),
-        border: Border.all(
-          color: LightTheme.midGreen.withOpacity(0.35),
-        ),
+        borderRadius: BorderRadius.circular(24),
+        gradient: LightTheme.heroGradient,
         boxShadow: [
           BoxShadow(
-            color: LightTheme.primary.withOpacity(0.6),
-            blurRadius: 32,
-            offset: const Offset(0, 16),
+            color: LightTheme.primaryDark.withOpacity(0.22),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Top row ──────────────────────────────────────────────────
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -64,8 +47,8 @@ class HomeHeroCard extends StatelessWidget {
                         Container(
                           width: 8,
                           height: 8,
-                          decoration: const BoxDecoration(
-                            color: LightTheme.accent,
+                          decoration: BoxDecoration(
+                            color: LightTheme.sage,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -75,8 +58,8 @@ class HomeHeroCard extends StatelessWidget {
                             statusLabel,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: LightTheme.accent,
+                            style: t.bodyMedium?.copyWith(
+                              color: LightTheme.sage,
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
                               letterSpacing: 0.4,
@@ -88,8 +71,8 @@ class HomeHeroCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       '$plantCount piante\nnel tuo giardino',
-                      style: textTheme.headlineMedium?.copyWith(
-                        color: LightTheme.textPrimary,
+                      style: t.headlineMedium?.copyWith(
+                        color: Colors.white,
                         fontWeight: FontWeight.w800,
                         height: 1.2,
                       ),
@@ -98,24 +81,14 @@ class HomeHeroCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              // Salute circolare
               _HealthRing(value: healthScore),
             ],
           ),
 
           const SizedBox(height: 22),
-
-          // ── Divider ───────────────────────────────────────────────────
-          Container(
-            height: 1,
-            color: LightTheme.midGreen.withOpacity(0.22),
-          ),
-
+          Container(height: 1, color: Colors.white.withOpacity(0.15)),
           const SizedBox(height: 18),
 
-          // ── Bottom stats ──────────────────────────────────────────────
-          // Expanded + FittedBox evita l'overflow orizzontale su schermi stretti
-          // o con font più grandi: le tre statistiche si dividono lo spazio.
           Row(
             children: [
               Expanded(
@@ -123,7 +96,7 @@ class HomeHeroCard extends StatelessWidget {
                   icon: Icons.water_drop_rounded,
                   label: 'Da annaffiare',
                   value: alertCount.toString(),
-                  color: const Color(0xFF4FC3F7),
+                  color: const Color(0xFF7DD3FC),
                 ),
               ),
               const SizedBox(width: 8),
@@ -132,7 +105,7 @@ class HomeHeroCard extends StatelessWidget {
                   icon: Icons.wb_sunny_rounded,
                   label: 'In fioritura',
                   value: '2',
-                  color: LightTheme.amber,
+                  color: const Color(0xFFFCD34D),
                 ),
               ),
               const SizedBox(width: 8),
@@ -154,18 +127,23 @@ class HomeHeroCard extends StatelessWidget {
 
 class _HealthRing extends StatelessWidget {
   const _HealthRing({required this.value});
-
   final int value;
 
   @override
   Widget build(BuildContext context) {
+    final color = value >= 75
+        ? LightTheme.sage
+        : value >= 50
+        ? LightTheme.amber
+        : LightTheme.coral;
+
     return Container(
       width: 72,
       height: 72,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: LightTheme.accent.withOpacity(0.1),
-        border: Border.all(color: LightTheme.accent.withOpacity(0.3), width: 2),
+        color: color.withOpacity(0.15),
+        border: Border.all(color: color.withOpacity(0.5), width: 2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -173,7 +151,7 @@ class _HealthRing extends StatelessWidget {
           Text(
             '$value%',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: LightTheme.accent,
+              color: color,
               fontWeight: FontWeight.w800,
               fontSize: 18,
             ),
@@ -181,7 +159,7 @@ class _HealthRing extends StatelessWidget {
           Text(
             'salute',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: LightTheme.textSecondary,
+              color: Colors.white.withOpacity(0.7),
               fontSize: 10,
             ),
           ),
@@ -206,7 +184,7 @@ class _HeroStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final t = Theme.of(context).textTheme;
 
     return FittedBox(
       fit: BoxFit.scaleDown,
@@ -218,7 +196,7 @@ class _HeroStat extends StatelessWidget {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withOpacity(0.18),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 14),
@@ -233,9 +211,8 @@ class _HeroStat extends StatelessWidget {
                 Text(
                   value,
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.titleMedium?.copyWith(
-                    color: LightTheme.textPrimary,
+                  style: t.titleMedium?.copyWith(
+                    color: Colors.white,
                     fontWeight: FontWeight.w800,
                     fontSize: 16,
                   ),
@@ -243,11 +220,9 @@ class _HeroStat extends StatelessWidget {
                 Text(
                   label,
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: textTheme.bodyMedium?.copyWith(
+                  style: t.bodyMedium?.copyWith(
                     fontSize: 10,
-                    color: LightTheme.textSecondary,
+                    color: Colors.white.withOpacity(0.65),
                   ),
                 ),
               ],
