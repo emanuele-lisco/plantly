@@ -10,6 +10,8 @@ import '../../widgets/auth/auth_card.dart';
 import '../../widgets/auth/auth_header.dart';
 import '../../widgets/auth/google_auth_button.dart';
 import '../../widgets/feedback/snackbar_helper.dart';
+import '../../widgets/location/city_picker_field.dart';
+import '../../widgets/location/country_picker_field.dart';
 import '../../widgets/sign_up/password_strength.dart';
 
 class SignUpPage extends StatelessWidget {
@@ -128,45 +130,28 @@ class SignUpPage extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(height: 14),
-                                  // Paese + Città
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: TextField(
-                                          enabled: !loading,
-                                          onChanged: context
-                                              .read<SignUpFormCubit>()
-                                              .updateCountry,
-                                          decoration: InputDecoration(
-                                            hintText: 'Paese',
-                                            label: const Text('Paese'),
-                                            prefixIcon: const Icon(
-                                                Icons.public_rounded),
-                                            errorText: formState.showErrors
-                                                ? formState.countryError
-                                                : null,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: TextField(
-                                          enabled: !loading,
-                                          onChanged: context
-                                              .read<SignUpFormCubit>()
-                                              .updateCity,
-                                          decoration: InputDecoration(
-                                            hintText: 'Città',
-                                            label: const Text('Città'),
-                                            prefixIcon: const Icon(
-                                                Icons.location_city_outlined),
-                                            errorText: formState.showErrors
-                                                ? formState.cityError
-                                                : null,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                  // Paese + Città da API
+                                  CountryPickerField(
+                                    enabled: !loading,
+                                    value: formState.selectedCountry,
+                                    onChanged: context
+                                        .read<SignUpFormCubit>()
+                                        .updateCountry,
+                                    errorText: formState.showErrors
+                                        ? formState.countryError
+                                        : null,
+                                  ),
+                                  const SizedBox(height: 14),
+                                  CityPickerField(
+                                    enabled: !loading,
+                                    country: formState.selectedCountry,
+                                    value: formState.selectedCity,
+                                    onSelected: context
+                                        .read<SignUpFormCubit>()
+                                        .updateCity,
+                                    errorText: formState.showErrors
+                                        ? formState.cityError
+                                        : null,
                                   ),
                                   const SizedBox(height: 14),
                                   // Password

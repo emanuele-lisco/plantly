@@ -16,6 +16,10 @@ class UserPlant extends Equatable {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
+  /// ID del dispositivo smart pot collegato a questa pianta.
+  /// Null se la pianta non ha ancora un vaso intelligente associato.
+  final String? deviceId;
+
   const UserPlant({
     required this.id,
     required this.speciesId,
@@ -29,7 +33,10 @@ class UserPlant extends Equatable {
     required this.imageUrl,
     this.createdAt,
     this.updatedAt,
+    this.deviceId,
   });
+
+  bool get hasDevice => deviceId != null && deviceId!.trim().isNotEmpty;
 
   UserPlant copyWith({
     String? id,
@@ -44,6 +51,8 @@ class UserPlant extends Equatable {
     String? imageUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? deviceId,
+    bool clearDeviceId = false,
   }) {
     return UserPlant(
       id: id ?? this.id,
@@ -58,6 +67,7 @@ class UserPlant extends Equatable {
       imageUrl: imageUrl ?? this.imageUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      deviceId: clearDeviceId ? null : deviceId ?? this.deviceId,
     );
   }
 
@@ -74,6 +84,7 @@ class UserPlant extends Equatable {
       'imageUrl': imageUrl,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'deviceId': deviceId,
     };
   }
 
@@ -91,13 +102,14 @@ class UserPlant extends Equatable {
       imageUrl: readString(json['imageUrl']),
       createdAt: readDateTime(json['createdAt']),
       updatedAt: readDateTime(json['updatedAt']),
+      deviceId: readNullableString(json['deviceId']),
     );
   }
 
   factory UserPlant.fromFirestore(
-      String id,
-      Map<String, dynamic> data,
-      ) {
+    String id,
+    Map<String, dynamic> data,
+  ) {
     return UserPlant.fromJson({
       ...data,
       'id': id,
@@ -106,17 +118,18 @@ class UserPlant extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    speciesId,
-    name,
-    species,
-    room,
-    moisture,
-    light,
-    health,
-    nextAction,
-    imageUrl,
-    createdAt,
-    updatedAt,
-  ];
+        id,
+        speciesId,
+        name,
+        species,
+        room,
+        moisture,
+        light,
+        health,
+        nextAction,
+        imageUrl,
+        createdAt,
+        updatedAt,
+        deviceId,
+      ];
 }

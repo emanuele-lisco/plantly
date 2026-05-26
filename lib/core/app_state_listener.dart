@@ -22,9 +22,15 @@ class AppStateListener extends StatelessWidget {
     return MultiBlocListener(
       listeners: [
         BlocListener<AuthBloc, AuthBlocState>(
-          listenWhen: (previous, current) =>
-          previous.status != current.status &&
-              current.status != AuthStatus.unknown,
+          listenWhen: (previous, current) {
+            if (current.status == AuthStatus.unknown) return false;
+
+            final previousUid = previous.user?.uid;
+            final currentUid = current.user?.uid;
+
+            return previous.status != current.status ||
+                previousUid != currentUid;
+          },
           listener: (context, state) {
             final sessionCubit = context.read<SessionCubit>();
             final profileCubit = context.read<ProfileCubit>();

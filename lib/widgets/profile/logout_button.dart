@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
-import 'package:flutter/material.dart';
-import 'package:plantly_app/features/theme/models/theme.dart';
 
 class LogoutButton extends StatelessWidget {
   const LogoutButton({

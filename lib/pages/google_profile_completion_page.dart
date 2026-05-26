@@ -6,6 +6,8 @@ import '../cubits/forms/google_profile_completion_form_cubit.dart';
 import '../cubits/google_profile_completion/google_profile_completion_cubit.dart';
 import '../features/theme/models/theme.dart';
 import '../widgets/feedback/snackbar_helper.dart';
+import '../widgets/location/city_picker_field.dart';
+import '../widgets/location/country_picker_field.dart';
 
 class GoogleProfileCompletionPage extends StatelessWidget {
   const GoogleProfileCompletionPage({super.key});
@@ -141,42 +143,23 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(height: 17),
-                                  TextFormField(
+                                  CountryPickerField(
                                     enabled: !loading,
-                                    initialValue: formState.country,
-                                    keyboardType: TextInputType.text,
-                                    textInputAction: TextInputAction.next,
+                                    value: formState.selectedCountry,
                                     onChanged: formCubit.updateCountry,
-                                    decoration: InputDecoration(
-                                      hintText: 'Paese',
-                                      label: const Text('Paese'),
-                                      prefixIcon:
-                                      const Icon(Icons.flag_outlined),
-                                      errorText: formState.showErrors
-                                          ? formState.countryError
-                                          : null,
-                                    ),
+                                    errorText: formState.showErrors
+                                        ? formState.countryError
+                                        : null,
                                   ),
                                   const SizedBox(height: 17),
-                                  TextFormField(
+                                  CityPickerField(
                                     enabled: !loading,
-                                    initialValue: formState.city,
-                                    keyboardType: TextInputType.text,
-                                    textInputAction: TextInputAction.done,
-                                    onChanged: formCubit.updateCity,
-                                    onFieldSubmitted: loading
-                                        ? null
-                                        : (_) => formCubit.submit(),
-                                    decoration: InputDecoration(
-                                      hintText: 'Città',
-                                      label: const Text('Città'),
-                                      prefixIcon: const Icon(
-                                        Icons.location_city_outlined,
-                                      ),
-                                      errorText: formState.showErrors
-                                          ? formState.cityError
-                                          : null,
-                                    ),
+                                    country: formState.selectedCountry,
+                                    value: formState.selectedCity,
+                                    onSelected: formCubit.updateCity,
+                                    errorText: formState.showErrors
+                                        ? formState.cityError
+                                        : null,
                                   ),
                                   const SizedBox(height: 30),
                                   SizedBox(

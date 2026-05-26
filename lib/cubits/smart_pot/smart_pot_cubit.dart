@@ -5,173 +5,73 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../repositories/smart_pot_repository.dart';
 import 'smart_pot_state.dart';
 
+export 'smart_pot_state.dart';
+
 class SmartPotCubit extends Cubit<SmartPotState> {
   SmartPotCubit({required SmartPotRepository smartPotRepository})
       : _smartPotRepository = smartPotRepository,
         super(const SmartPotInitial());
 
   final SmartPotRepository _smartPotRepository;
-  StreamSubscription? _deviceSubscription;
+  StreamSubscription<dynamic>? _subscription;
+  String? _currentDeviceId;
 
-  void watchDevice({required String userId, required String deviceId}) {
-    final safeUserId = userId.trim();
-    final safeDeviceId = deviceId.trim();
+  void watchDevice(String? deviceId) {
+    final trimmed = deviceId?.trim() ?? '';
 
-    if (safeUserId.isEmpty || safeDeviceId.isEmpty) {
-      emit(
-        const SmartPotFailure(
-          message: 'Utente o dispositivo smart pot non disponibile.',
-        ),
-      );
+    if (trimmed.isEmpty) {
+      _cancelSubscription();
+      _currentDeviceId = null;
+      emit(const SmartPotNoDevice());
       return;
     }
 
-    emit(SmartPotLoading(device: state.device));
-    _deviceSubscription?.cancel();
-    _deviceSubscription = _smartPotRepository
-        .watchDevice(safeUserId, safeDeviceId)
-        .listen(
-          (device) {
-            if (device == null || !device.isLinked) {
-              emit(
-                const SmartPotDisconnected(
-                  message: 'Nessun vaso intelligente collegato.',
-                ),
-              );
-              return;
-            }
+    if (_currentDeviceId == trimmed && _subscription != null) return;
 
-            if (device.isOnline) {
-              emit(SmartPotConnected(device: device));
-            } else {
-              emit(
-                SmartPotDisconnected(
-                  device: device,
-                  message: 'Vaso intelligente collegato ma offline.',
-                ),
-              );
-            }
-          },
-          onError: (_) {
-            emit(
-              SmartPotFailure(
-                message: 'Errore durante l’ascolto del vaso intelligente.',
-                device: state.device,
-              ),
-            );
-          },
-        );
+    _cancelSubscription();
+    _currentDeviceId = trimmed;
+    emit(const SmartPotLoading());
+
+    _subscription = _smartPotRepository.watchDevice(trimmed).listen(
+      (device) {
+        if (device == null) {
+          emit(
+            const SmartPotFailure(
+              message: 'Dispositivo non trovato su Firestore.',
+            ),
+          );
+          return;
+        }
+
+        if (device.isOnline) {
+          emit(SmartPotLoaded(device: device));
+        } else {
+          emit(SmartPotOffline(device: device));
+        }
+      },
+      onError: (Object error) {
+        final message = error is SmartPotRepositoryException
+            ? error.message
+            : 'Errore di connessione al dispositivo.';
+        emit(SmartPotFailure(message: message));
+      },
+    );
   }
 
-  Future<void> linkDeviceToPlant({
-    required String userId,
-    required String deviceId,
-    required String gardenPlantId,
-    String? name,
-    String? deviceCode,
-  }) async {
-    emit(SmartPotLoading(device: state.device));
-    try {
-      await _smartPotRepository.linkDeviceToPlant(
-        userId: userId,
-        deviceId: deviceId,
-        gardenPlantId: gardenPlantId,
-        name: name,
-        deviceCode: deviceCode,
-      );
-      watchDevice(userId: userId, deviceId: deviceId);
-    } on SmartPotRepositoryException catch (error) {
-      emit(SmartPotFailure(message: error.message, device: state.device));
-    } catch (_) {
-      emit(
-        SmartPotFailure(
-          message: 'Errore imprevisto durante il collegamento del vaso.',
-          device: state.device,
-        ),
-      );
-    }
+  Future<void> clear() async {
+    await _cancelSubscription();
+    _currentDeviceId = null;
+    emit(const SmartPotInitial());
   }
 
-  Future<void> unlinkDevice({
-    required String userId,
-    required String deviceId,
-    required String gardenPlantId,
-  }) async {
-    emit(SmartPotLoading(device: state.device));
-    try {
-      await _smartPotRepository.unlinkDevice(
-        userId: userId,
-        deviceId: deviceId,
-        gardenPlantId: gardenPlantId,
-      );
-      emit(
-        const SmartPotDisconnected(
-          message: 'Vaso intelligente scollegato.',
-        ),
-      );
-    } on SmartPotRepositoryException catch (error) {
-      emit(SmartPotFailure(message: error.message, device: state.device));
-    } catch (_) {
-      emit(
-        SmartPotFailure(
-          message: 'Errore imprevisto durante lo scollegamento del vaso.',
-          device: state.device,
-        ),
-      );
-    }
-  }
-
-  Future<void> updatePumpCalibration({
-    required String userId,
-    required String deviceId,
-    required double pumpMlPerSecond,
-  }) async {
-    try {
-      await _smartPotRepository.updatePumpCalibration(
-        userId: userId,
-        deviceId: deviceId,
-        pumpMlPerSecond: pumpMlPerSecond,
-      );
-    } on SmartPotRepositoryException catch (error) {
-      emit(SmartPotFailure(message: error.message, device: state.device));
-    } catch (_) {
-      emit(
-        SmartPotFailure(
-          message: 'Errore imprevisto durante la calibrazione.',
-          device: state.device,
-        ),
-      );
-    }
-  }
-
-  Future<void> requestManualIrrigation({
-    required String userId,
-    required String deviceId,
-    required double waterMl,
-    required double pumpRuntimeSeconds,
-  }) async {
-    try {
-      await _smartPotRepository.requestManualIrrigation(
-        userId: userId,
-        deviceId: deviceId,
-        waterMl: waterMl,
-        pumpRuntimeSeconds: pumpRuntimeSeconds,
-      );
-    } on SmartPotRepositoryException catch (error) {
-      emit(SmartPotFailure(message: error.message, device: state.device));
-    } catch (_) {
-      emit(
-        SmartPotFailure(
-          message: 'Errore imprevisto durante la richiesta di irrigazione.',
-          device: state.device,
-        ),
-      );
-    }
+  Future<void> _cancelSubscription() async {
+    await _subscription?.cancel();
+    _subscription = null;
   }
 
   @override
-  Future<void> close() {
-    _deviceSubscription?.cancel();
+  Future<void> close() async {
+    await _cancelSubscription();
     return super.close();
   }
 }

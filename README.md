@@ -1168,3 +1168,56 @@ lib/widgets/sign_up/password_strength.dart
 - testare su Android/Web/iOS;
 - implementare gestione smart pot e notifiche solo in fasi successive.
 
+
+
+---
+
+## 15. Review tecnica post Smart Pot / Location / Weather prep
+
+Questa sezione fotografa lo stato dopo le patch relative a smart pot, irrigazione manuale, configurazione automatica, location utente e predisposizione meteo.
+
+### Stato generale
+
+La base è compilabile a livello architetturale e le nuove feature principali sono separate correttamente:
+
+- telemetria smart pot in `SmartPotCubit` + `SmartPotRepository`;
+- comando manuale "Annaffia ora" in `IrrigationControlCubit`;
+- configurazione irrigazione automatica in `AutoIrrigationSettingsCubit`;
+- location utente in `PlantlyUser`, non più nella singola pianta;
+- country/city picker basati su API esterne;
+- `WeatherService` predisposto ma senza chiamate meteo reali.
+
+### Correzioni applicate nella patch di stabilizzazione
+
+- `SmartPotRepository` ora aggiorna la pianta nel path reale del giardino:
+  `users/{uid}/garden/{plantId}`.
+- I commenti tecnici di `SmartPotDevice` sono stati riallineati al modello reale `GardenPlant`.
+- `createManualIrrigationCommand()` verifica anche l'ownership del device quando `ownerUid` è presente.
+- `AppStateListener` reagisce anche al cambio UID, non solo al cambio di status auth.
+- `CountryPickerField` evita di passare un valore iniziale quando la lista paesi non è ancora caricata.
+- Rimossi import duplicati e import inutilizzati minori.
+- Rimossa la classe privata non usata `_TotalPlantsBadge`.
+- Aggiunta `assets/images/.gitkeep` perché il path è dichiarato in `pubspec.yaml`.
+
+### Punti deboli ancora presenti
+
+- Restano molte deprecazioni `withOpacity()` e alcuni suggerimenti `prefer_const_constructors`. Non sono bloccanti e vanno gestiti in una futura patch grafica/cleanup.
+- `UserPlant`, `UserPlantsRepository` e `UserPlantsCubit` risultano ancora presenti come flusso legacy. Il flusso reale del giardino usa invece `GardenPlant` + `GardenRepository`.
+- La sezione smart pot nella `PlantCard` crea Cubit locali per ogni card. Va bene per il prototipo, ma in futuro conviene valutare performance se il giardino contiene molte piante.
+- Il comando manuale crea un documento pending in `devices/{deviceId}/commands`; manca ancora il backend/firmware consumer.
+- La modalità automatica salva solo configurazione. Non genera ancora comandi automatici.
+- `WeatherService` è solo un contratto. Non esiste ancora una pagina meteo reale né una `WeatherRepository`.
+
+### Prossimo passo consigliato
+
+Prima di implementare il calcolo avanzato dell'irrigazione, si può aggiungere una sezione meteo molto semplice accessibile da drawer:
+
+```text
+Drawer
+  - avatar / immagine utente
+  - username / email
+  - città e paese
+  - voce "Meteo"
+```
+
+La pagina meteo deve limitarsi a leggere la location dal profilo utente e mostrare dati base. Non deve ancora influenzare l'irrigazione.

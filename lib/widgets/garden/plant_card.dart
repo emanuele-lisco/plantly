@@ -1,28 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:plantly_app/features/plant/garden_plant.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
+import 'package:plantly_app/cubits/auto_irrigation_settings/auto_irrigation_settings_cubit.dart';
+import 'package:plantly_app/cubits/irrigation_control/irrigation_control_cubit.dart';
+import 'package:plantly_app/cubits/smart_pot/smart_pot_cubit.dart';
+import 'package:plantly_app/repositories/smart_pot_repository.dart';
+import 'package:plantly_app/widgets/smart_pot/auto_irrigation_settings_card.dart';
+import 'package:plantly_app/widgets/smart_pot/irrigation_control_button.dart';
+import 'package:plantly_app/widgets/smart_pot/smart_pot_status_card.dart';
 
 class PlantCard extends StatelessWidget {
   const PlantCard({
     super.key,
     required this.plant,
-    this.canWater = false,
-    this.waterDisabledReason = '',
-    this.onWater,
+    required this.userId,
     this.onRemove,
   });
 
   final GardenPlant plant;
-  final bool canWater;
-  final String waterDisabledReason;
-  final VoidCallback? onWater;
+  final String userId;
   final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final nextWateringText = _nextWateringLabel(plant.nextWateringAt);
-    final waterButtonLabel = canWater ? 'Annaffia' : 'Vaso non collegato';
 
     return Container(
       decoration: BoxDecoration(
@@ -126,38 +129,25 @@ class PlantCard extends StatelessWidget {
               ],
             ),
           ),
-          if (!canWater && waterDisabledReason.trim().isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: BlocProvider(
+              create: (context) => SmartPotCubit(
+                smartPotRepository: context.read<SmartPotRepository>(),
+              )..watchDevice(plant.linkedDeviceId),
+              child: const SmartPotStatusCard(),
+            ),
+          ),
+          if (plant.hasLinkedDevice)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: LightTheme.amber.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: LightTheme.amber.withOpacity(0.25),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.info_outline_rounded,
-                      color: LightTheme.amber,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        waterDisabledReason,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: LightTheme.textSecondary,
-                          height: 1.3,
-                        ),
-                      ),
-                    ),
-                  ],
+              child: BlocProvider(
+                create: (context) => AutoIrrigationSettingsCubit(
+                  smartPotRepository: context.read<SmartPotRepository>(),
+                )..load(plant.linkedDeviceId),
+                child: AutoIrrigationSettingsCard(
+                  deviceId: plant.linkedDeviceId,
+                  watering: plant.watering,
                 ),
               ),
             ),
@@ -166,15 +156,13 @@ class PlantCard extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: canWater ? onWater : null,
-                    icon: const Icon(Icons.water_drop_rounded, size: 16),
-                    label: Text(waterButtonLabel),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(42),
-                      backgroundColor: LightTheme.water,
-                      disabledBackgroundColor: LightTheme.border,
-                      disabledForegroundColor: LightTheme.textMuted,
+                  child: BlocProvider(
+                    create: (context) => IrrigationControlCubit(
+                      smartPotRepository: context.read<SmartPotRepository>(),
+                    ),
+                    child: IrrigationControlButton(
+                      deviceId: plant.linkedDeviceId,
+                      requestedBy: userId,
                     ),
                   ),
                 ),
@@ -188,7 +176,8 @@ class PlantCard extends StatelessWidget {
                       minimumSize: const Size.fromHeight(42),
                       foregroundColor: LightTheme.coral,
                       side: BorderSide(
-                          color: LightTheme.coral.withOpacity(0.4)),
+                        color: LightTheme.coral.withOpacity(0.4),
+                      ),
                     ),
                   ),
                 ),

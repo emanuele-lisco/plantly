@@ -24,6 +24,7 @@ class GardenPlant extends Equatable {
     this.notes = '',
     this.location = '',
     this.notificationEnabled = true,
+    this.deviceId,
     this.smartPotId,
     this.targetMoistureMin = 35,
     this.targetMoistureMax = 65,
@@ -52,8 +53,28 @@ class GardenPlant extends Equatable {
   final DateTime? nextWateringAt;
   final String notes;
   final String location;
+
   final bool notificationEnabled;
+
+  /// ID del dispositivo smart pot collegato alla pianta.
+  ///
+  /// `smartPotId` resta letto per compatibilità con documenti vecchi,
+  /// ma la nuova struttura Firestore usa `deviceId`.
+  final String? deviceId;
+
+  // Campo legacy: usare `deviceId` nei nuovi documenti.
   final String? smartPotId;
+
+  String? get linkedDeviceId {
+    final current = deviceId?.trim() ?? '';
+    if (current.isNotEmpty) return current;
+
+    final legacy = smartPotId?.trim() ?? '';
+    return legacy.isEmpty ? null : legacy;
+  }
+
+  bool get hasLinkedDevice => linkedDeviceId != null;
+
 
   final double targetMoistureMin;
   final double targetMoistureMax;
@@ -97,6 +118,7 @@ class GardenPlant extends Equatable {
       notes: readString(json['notes']),
       location: readString(json['location']),
       notificationEnabled: readBool(json['notificationEnabled'], fallback: true),
+      deviceId: readNullableString(json['deviceId']) ?? readNullableString(json['smartPotId']),
       smartPotId: readNullableString(json['smartPotId']),
       targetMoistureMin: readDouble(json['targetMoistureMin'], fallback: 35),
       targetMoistureMax: readDouble(json['targetMoistureMax'], fallback: 65),
@@ -138,6 +160,7 @@ class GardenPlant extends Equatable {
       'notes': notes,
       'location': location,
       'notificationEnabled': notificationEnabled,
+      'deviceId': linkedDeviceId,
       'smartPotId': smartPotId,
       'targetMoistureMin': targetMoistureMin,
       'targetMoistureMax': targetMoistureMax,
@@ -169,6 +192,7 @@ class GardenPlant extends Equatable {
     String? notes,
     String? location,
     bool? notificationEnabled,
+    String? deviceId,
     String? smartPotId,
     double? targetMoistureMin,
     double? targetMoistureMax,
@@ -198,6 +222,7 @@ class GardenPlant extends Equatable {
       notes: notes ?? this.notes,
       location: location ?? this.location,
       notificationEnabled: notificationEnabled ?? this.notificationEnabled,
+      deviceId: deviceId ?? this.deviceId,
       smartPotId: smartPotId ?? this.smartPotId,
       targetMoistureMin: targetMoistureMin ?? this.targetMoistureMin,
       targetMoistureMax: targetMoistureMax ?? this.targetMoistureMax,
@@ -208,6 +233,7 @@ class GardenPlant extends Equatable {
       exposure: exposure ?? this.exposure,
     );
   }
+
 
   static bool? _readNullableBool(dynamic value) {
     if (value == null) return null;
@@ -246,6 +272,7 @@ class GardenPlant extends Equatable {
     notes,
     location,
     notificationEnabled,
+    deviceId,
     smartPotId,
     targetMoistureMin,
     targetMoistureMax,

@@ -24,9 +24,9 @@ class UserPlantsRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-          .map((doc) => UserPlant.fromFirestore(doc.id, doc.data()))
-          .toList(growable: false),
-    );
+              .map((doc) => UserPlant.fromFirestore(doc.id, doc.data()))
+              .toList(growable: false),
+        );
   }
 
   Future<void> addUserPlant({
@@ -41,8 +41,9 @@ class UserPlantsRepository {
 
     try {
       final collection = _plantsCollection(trimmedUserId);
-      final doc =
-      plant.id.trim().isEmpty ? collection.doc() : collection.doc(plant.id);
+      final doc = plant.id.trim().isEmpty
+          ? collection.doc()
+          : collection.doc(plant.id);
 
       final payload = _toFirestorePayload(plant, isCreate: true);
 
@@ -76,14 +77,16 @@ class UserPlantsRepository {
     try {
       final payload = _toFirestorePayload(plant, isCreate: false);
 
-      await _plantsCollection(trimmedUserId).doc(trimmedPlantId).update(payload);
+      await _plantsCollection(trimmedUserId)
+          .doc(trimmedPlantId)
+          .update(payload);
     } on FirebaseException catch (_) {
       throw const UserPlantsRepositoryException(
-        'Errore durante l’aggiornamento della pianta',
+        "Errore durante l'aggiornamento della pianta",
       );
     } catch (_) {
       throw const UserPlantsRepositoryException(
-        'Errore imprevisto durante l’aggiornamento della pianta',
+        "Errore imprevisto durante l'aggiornamento della pianta",
       );
     }
   }
@@ -107,19 +110,20 @@ class UserPlantsRepository {
       await _plantsCollection(trimmedUserId).doc(trimmedPlantId).delete();
     } on FirebaseException catch (_) {
       throw const UserPlantsRepositoryException(
-        'Errore durante l’eliminazione della pianta',
+        "Errore durante l'eliminazione della pianta",
       );
     } catch (_) {
       throw const UserPlantsRepositoryException(
-        'Errore imprevisto durante l’eliminazione della pianta',
+        "Errore imprevisto durante l'eliminazione della pianta",
       );
     }
   }
 
   Map<String, dynamic> _toFirestorePayload(
-      UserPlant plant, {
-        required bool isCreate,
-      }) {
+    UserPlant plant, {
+    required bool isCreate,
+  }) {
+    // toJson() include già 'deviceId' (null se non collegata).
     final payload = Map<String, dynamic>.from(plant.toJson())..remove('id');
 
     payload['updatedAt'] = FieldValue.serverTimestamp();

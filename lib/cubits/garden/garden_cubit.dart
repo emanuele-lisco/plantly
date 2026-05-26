@@ -68,6 +68,8 @@ class GardenCubit extends Cubit<GardenState> {
       );
     }
 
+    final normalizedLocation = location.trim();
+
     final now = DateTime.now().toUtc();
     final plant = GardenPlant(
       id: _buildGardenPlantId(species.id, now),
@@ -87,7 +89,7 @@ class GardenCubit extends Cubit<GardenState> {
       lastWateredAt: null,
       nextWateringAt: _initialNextWateringAt(now, species.watering),
       notes: '',
-      location: location.trim(),
+      location: normalizedLocation,
       notificationEnabled: true,
       smartPotId: null,
     );

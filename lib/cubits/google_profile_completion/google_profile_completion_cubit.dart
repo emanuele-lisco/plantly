@@ -26,18 +26,23 @@ class GoogleProfileCompletionCubit
 
   Future<void> completeProfile({
     required String username,
+    required String countryCode,
     required String country,
     required String city,
+    double? latitude,
+    double? longitude,
   }) async {
     emit(const GoogleProfileCompletionLoading());
 
     try {
       final trimmedUsername = username.trim();
+      final trimmedCountryCode = countryCode.trim().toUpperCase();
       final trimmedCountry = country.trim();
       final trimmedCity = city.trim();
 
       final validationError = _validate(
         username: trimmedUsername,
+        countryCode: trimmedCountryCode,
         country: trimmedCountry,
         city: trimmedCity,
       );
@@ -51,7 +56,11 @@ class GoogleProfileCompletionCubit
         id: _firebaseUser.uid,
         username: trimmedUsername,
         country: trimmedCountry,
+        countryCode: trimmedCountryCode,
+        countryName: trimmedCountry,
         city: trimmedCity,
+        latitude: latitude,
+        longitude: longitude,
         updatedAt: DateTime.now().toUtc(),
       );
 
@@ -64,7 +73,11 @@ class GoogleProfileCompletionCubit
           existingProfile.copyWith(
             username: trimmedUsername,
             country: trimmedCountry,
+            countryCode: trimmedCountryCode,
+            countryName: trimmedCountry,
             city: trimmedCity,
+            latitude: latitude,
+            longitude: longitude,
             updatedAt: DateTime.now().toUtc(),
           ),
         );
@@ -82,6 +95,7 @@ class GoogleProfileCompletionCubit
 
   String? _validate({
     required String username,
+    required String countryCode,
     required String country,
     required String city,
   }) {
@@ -93,7 +107,7 @@ class GoogleProfileCompletionCubit
       return 'Username: usa solo lettere, numeri, punto o _';
     }
 
-    if (country.isEmpty) return 'Paese obbligatorio';
+    if (countryCode.isEmpty || country.isEmpty) return 'Paese obbligatorio';
     if (city.isEmpty) return 'Città obbligatoria';
 
     return null;

@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../features/location/city_option.dart';
+import '../../features/location/country_option.dart';
 import '../../features/strenght_enum.dart';
 import '../sign_up/sign_up_cubit.dart';
 
@@ -9,8 +11,11 @@ class SignUpFormState extends Equatable {
   final String nome;
   final String cognome;
   final String email;
+  final String countryCode;
   final String country;
   final String city;
+  final double? latitude;
+  final double? longitude;
   final String password;
   final String confirmPassword;
   final String? usernameError;
@@ -29,8 +34,11 @@ class SignUpFormState extends Equatable {
     this.nome = '',
     this.cognome = '',
     this.email = '',
+    this.countryCode = '',
     this.country = '',
     this.city = '',
+    this.latitude,
+    this.longitude,
     this.password = '',
     this.confirmPassword = '',
     this.usernameError,
@@ -45,13 +53,34 @@ class SignUpFormState extends Equatable {
     this.passwordStrength = Strength.empty,
   });
 
+  CountryOption? get selectedCountry => CountryOption.fromValues(
+        countryCode: countryCode,
+        countryName: country,
+      );
+
+  CityOption? get selectedCity {
+    if (city.trim().isEmpty) return null;
+    return CityOption(
+      name: city,
+      countryCode: countryCode,
+      countryName: country,
+      latitude: latitude,
+      longitude: longitude,
+    );
+  }
+
   SignUpFormState copyWith({
     String? username,
     String? nome,
     String? cognome,
     String? email,
+    String? countryCode,
     String? country,
     String? city,
+    double? latitude,
+    double? longitude,
+    bool clearLatitude = false,
+    bool clearLongitude = false,
     String? password,
     String? confirmPassword,
     String? usernameError,
@@ -70,8 +99,11 @@ class SignUpFormState extends Equatable {
       nome: nome ?? this.nome,
       cognome: cognome ?? this.cognome,
       email: email ?? this.email,
+      countryCode: countryCode ?? this.countryCode,
       country: country ?? this.country,
       city: city ?? this.city,
+      latitude: clearLatitude ? null : latitude ?? this.latitude,
+      longitude: clearLongitude ? null : longitude ?? this.longitude,
       password: password ?? this.password,
       confirmPassword: confirmPassword ?? this.confirmPassword,
       usernameError: usernameError,
@@ -93,8 +125,11 @@ class SignUpFormState extends Equatable {
         nome,
         cognome,
         email,
+        countryCode,
         country,
         city,
+        latitude,
+        longitude,
         password,
         confirmPassword,
         usernameError,
@@ -143,17 +178,26 @@ class SignUpFormCubit extends Cubit<SignUpFormState> {
     ));
   }
 
-  void updateCountry(String value) {
+  void updateCountry(CountryOption? value) {
     emit(state.copyWith(
-      country: value,
-      countryError: _validateRequired(value, 'Paese'),
+      countryCode: value?.code ?? '',
+      country: value?.name ?? '',
+      city: '',
+      clearLatitude: true,
+      clearLongitude: true,
+      countryError: value == null ? 'Paese obbligatorio' : null,
+      cityError: 'Città obbligatoria',
     ));
   }
 
-  void updateCity(String value) {
+  void updateCity(CityOption? value) {
     emit(state.copyWith(
-      city: value,
-      cityError: _validateRequired(value, 'Città'),
+      city: value?.name ?? '',
+      latitude: value?.latitude,
+      longitude: value?.longitude,
+      clearLatitude: value == null,
+      clearLongitude: value == null,
+      cityError: value == null ? 'Seleziona una città dalla lista' : null,
     ));
   }
 
@@ -161,8 +205,7 @@ class SignUpFormCubit extends Cubit<SignUpFormState> {
     emit(state.copyWith(
       password: value,
       passwordError: _validatePassword(value),
-      confirmPasswordError:
-          _validateConfirmPassword(state.confirmPassword, value),
+      confirmPasswordError: _validateConfirmPassword(state.confirmPassword, value),
       passwordStrength: _calculatePasswordStrength(value),
     ));
   }
@@ -179,7 +222,7 @@ class SignUpFormCubit extends Cubit<SignUpFormState> {
     final nomeError = _validateRequired(state.nome, 'Nome');
     final cognomeError = _validateRequired(state.cognome, 'Cognome');
     final emailError = _validateEmail(state.email);
-    final countryError = _validateRequired(state.country, 'Paese');
+    final countryError = _validateRequired(state.countryCode, 'Paese');
     final cityError = _validateRequired(state.city, 'Città');
     final passwordError = _validatePassword(state.password);
     final confirmPasswordError =
@@ -216,8 +259,11 @@ class SignUpFormCubit extends Cubit<SignUpFormState> {
       nome: state.nome.trim(),
       cognome: state.cognome.trim(),
       email: state.email.trim(),
+      countryCode: state.countryCode.trim(),
       country: state.country.trim(),
       city: state.city.trim(),
+      latitude: state.latitude,
+      longitude: state.longitude,
       password: state.password,
     );
   }
@@ -245,10 +291,7 @@ class SignUpFormCubit extends Cubit<SignUpFormState> {
 
   String? _validatePassword(String value) {
     if (value.isEmpty) return 'Password obbligatoria';
-
-    if (value.length < 8) {
-      return 'Minimo 8 caratteri';
-    }
+    if (value.length < 8) return 'Minimo 8 caratteri';
 
     final hasUppercase = RegExp(r'[A-Z]').hasMatch(value);
     final hasLowercase = RegExp(r'[a-z]').hasMatch(value);
@@ -256,18 +299,10 @@ class SignUpFormCubit extends Cubit<SignUpFormState> {
     final hasSpecialChar =
         RegExp(r'[!@#\$%^&*(),.?":{}|<>_\-\\/\[\]=+;]').hasMatch(value);
 
-    if (!hasUppercase) {
-      return 'Almeno una lettera maiuscola';
-    }
-    if (!hasLowercase) {
-      return 'Almeno una lettera minuscola';
-    }
-    if (!hasDigit) {
-      return 'Almeno un numero';
-    }
-    if (!hasSpecialChar) {
-      return 'Almeno un carattere speciale';
-    }
+    if (!hasUppercase) return 'Almeno una lettera maiuscola';
+    if (!hasLowercase) return 'Almeno una lettera minuscola';
+    if (!hasDigit) return 'Almeno un numero';
+    if (!hasSpecialChar) return 'Almeno un carattere speciale';
 
     return null;
   }
@@ -279,12 +314,9 @@ class SignUpFormCubit extends Cubit<SignUpFormState> {
   }
 
   Strength _calculatePasswordStrength(String value) {
-    if (value.isEmpty) {
-      return Strength.empty;
-    }
+    if (value.isEmpty) return Strength.empty;
 
     int score = 0;
-
     if (value.length >= 8) score++;
     if (RegExp(r'[A-Z]').hasMatch(value)) score++;
     if (RegExp(r'[a-z]').hasMatch(value)) score++;
@@ -293,12 +325,8 @@ class SignUpFormCubit extends Cubit<SignUpFormState> {
       score++;
     }
 
-    if (score <= 3) {
-      return Strength.weak;
-    } else if (score <= 4) {
-      return Strength.medium;
-    } else {
-      return Strength.strong;
-    }
+    if (score <= 3) return Strength.weak;
+    if (score <= 4) return Strength.medium;
+    return Strength.strong;
   }
 }

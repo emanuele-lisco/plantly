@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:plantly_app/blocs/auth/auth_bloc.dart';
 import 'package:plantly_app/cubits/garden/garden_cubit.dart';
 import 'package:plantly_app/cubits/plant_details/plant_details_cubit.dart';
-import 'package:plantly_app/pages/plant_detail_page.dart' hide GardenCubit;
+import 'package:plantly_app/pages/plant_detail_page.dart';
 import 'package:plantly_app/cubits/plant_search/plant_search_cubit.dart';
 import 'package:plantly_app/cubits/plant_search/plant_search_state.dart';
 import 'package:plantly_app/features/plant/plant_species.dart';

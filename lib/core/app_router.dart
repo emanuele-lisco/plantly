@@ -14,7 +14,7 @@ import 'package:plantly_app/features/plant/plant_species.dart';
 import 'package:plantly_app/features/user/user.dart';
 import 'package:plantly_app/pages/google_profile_completion_page.dart';
 import 'package:plantly_app/pages/main_shell_page.dart';
-import 'package:plantly_app/pages/plant_detail_page.dart' hide GardenCubit;
+import 'package:plantly_app/pages/plant_detail_page.dart';
 import 'package:plantly_app/pages/auth/sign_in_page.dart';
 import 'package:plantly_app/pages/auth/sign_up_page.dart';
 import 'package:plantly_app/pages/initial/splash_screen.dart';

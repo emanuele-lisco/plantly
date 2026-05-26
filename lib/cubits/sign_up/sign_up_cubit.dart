@@ -27,8 +27,11 @@ class SignUpCubit extends Cubit<SignUpState> {
     required String cognome,
     required String email,
     required String password,
+    required String countryCode,
     required String country,
     required String city,
+    double? latitude,
+    double? longitude,
   }) async {
     emit(SignUpLoading());
 
@@ -50,7 +53,11 @@ class SignUpCubit extends Cubit<SignUpState> {
         surname: cognome.trim(),
         email: email.trim(),
         country: country.trim(),
+        countryCode: countryCode.trim().toUpperCase(),
+        countryName: country.trim(),
         city: city.trim(),
+        latitude: latitude,
+        longitude: longitude,
       );
 
       try {

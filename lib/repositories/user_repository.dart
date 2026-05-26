@@ -74,7 +74,6 @@ class UserRepository {
       throw const UserRepositoryException('Username obbligatorio');
     }
 
-    final now = DateTime.now().toUtc();
     final userDoc = _usersCollection.doc(user.id);
     final usernameDoc = _usernamesCollection.doc(normalizedUsername);
 
@@ -96,8 +95,12 @@ class UserRepository {
           'name': user.name.trim(),
           'surname': user.surname.trim(),
           'email': user.email.trim(),
-          'country': user.country.trim(),
+          'country': user.countryName.trim(),
+          'countryCode': user.countryCode.trim().toUpperCase(),
+          'countryName': user.countryName.trim(),
           'city': user.city.trim(),
+          'latitude': user.latitude,
+          'longitude': user.longitude,
           'imageUrl': user.imageUrl,
           'bio': user.bio,
           'createdAt': FieldValue.serverTimestamp(),
@@ -132,7 +135,6 @@ class UserRepository {
 
     final userDoc = _usersCollection.doc(user.id);
     final newUsernameDoc = _usernamesCollection.doc(normalizedUsername);
-    final now = DateTime.now().toUtc();
 
     try {
       await _firestore.runTransaction((transaction) async {
@@ -160,8 +162,12 @@ class UserRepository {
           'name': user.name.trim(),
           'surname': user.surname.trim(),
           'email': user.email.trim(),
-          'country': user.country.trim(),
+          'country': user.countryName.trim(),
+          'countryCode': user.countryCode.trim().toUpperCase(),
+          'countryName': user.countryName.trim(),
           'city': user.city.trim(),
+          'latitude': user.latitude,
+          'longitude': user.longitude,
           'imageUrl': user.imageUrl,
           'bio': user.bio,
           'updatedAt': FieldValue.serverTimestamp(),

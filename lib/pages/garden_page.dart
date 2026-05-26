@@ -56,10 +56,9 @@ class _GardenContent extends StatelessWidget {
           sunExposure: plants.isEmpty ? 0 : 70,
         ),
         const SizedBox(height: 24),
-const Divider(),
+        const Divider(),
         const SizedBox(height: 24),
-            Text('Le tue piante', style: textTheme.titleLarge),
-
+        Text('Le tue piante', style: textTheme.titleLarge),
 
         const SizedBox(height: 14),
         if (plants.isEmpty) ...[
@@ -71,11 +70,7 @@ const Divider(),
               padding: const EdgeInsets.only(bottom: 14),
               child: PlantCard(
                 plant: plant,
-                canWater: _canWaterPlant(plant),
-                waterDisabledReason: _waterDisabledReason(plant),
-                onWater: _canWaterPlant(plant)
-                    ? () => _markAsWatered(context, plant)
-                    : null,
+                userId: context.read<AuthBloc>().state.user?.uid ?? '',
                 onRemove: () => _confirmRemove(context, plant),
               ),
             ),
@@ -90,35 +85,6 @@ const Divider(),
   }
 
 
-  static bool _canWaterPlant(GardenPlant plant) {
-    return _hasLinkedSmartPot(plant) && _hasMinimumCareData(plant);
-  }
-
-  static bool _hasLinkedSmartPot(GardenPlant plant) {
-    return plant.smartPotId != null && plant.smartPotId!.trim().isNotEmpty;
-  }
-
-  static bool _hasMinimumCareData(GardenPlant plant) {
-    final watering = plant.watering.trim().toLowerCase();
-    final hasWatering = watering.isNotEmpty && watering != 'none' && watering != 'non indicata';
-    final hasSunlight = plant.sunlight.isNotEmpty;
-    final hasNextWatering = plant.nextWateringAt != null;
-
-    return hasWatering && hasSunlight && hasNextWatering;
-  }
-
-  static String _waterDisabledReason(GardenPlant plant) {
-    if (!_hasLinkedSmartPot(plant)) {
-      return 'Collega un vaso intelligente per abilitare l\'irrigazione dall\'app.';
-    }
-
-    if (!_hasMinimumCareData(plant)) {
-      return 'Completa i dati di cura della pianta prima di abilitare l\'irrigazione.';
-    }
-
-    return '';
-  }
-
   static bool _isWateringDue(GardenPlant plant) {
     final next = plant.nextWateringAt;
     if (next == null) return false;
@@ -126,20 +92,6 @@ const Divider(),
     return !next.isAfter(now);
   }
 
-  Future<void> _markAsWatered(BuildContext context, GardenPlant plant) async {
-    final userId = context.read<AuthBloc>().state.user?.uid ?? '';
-    final result = await context.read<GardenCubit>().markAsWatered(
-      userId: userId,
-      plant: plant,
-    );
-
-    if (!context.mounted) return;
-    if (result.isSuccess) {
-      SnackBarHelper.showSuccess(context, result.message);
-    } else {
-      SnackBarHelper.showError(context, result.message);
-    }
-  }
 
   Future<void> _confirmRemove(BuildContext context, GardenPlant plant) async {
     final confirmed = await showDialog<bool>(
@@ -174,32 +126,6 @@ const Divider(),
     } else {
       SnackBarHelper.showError(context, result.message);
     }
-  }
-}
-
-class _TotalPlantsBadge extends StatelessWidget {
-  const _TotalPlantsBadge({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: LightTheme.accent.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        '$count totali',
-        style: textTheme.bodyMedium?.copyWith(
-          color: LightTheme.accent,
-          fontWeight: FontWeight.w700,
-          fontSize: 12,
-        ),
-      ),
-    );
   }
 }
 

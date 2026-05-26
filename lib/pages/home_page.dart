@@ -9,7 +9,6 @@ import 'package:plantly_app/cubits/profile/profile_cubit.dart';
 import 'package:plantly_app/cubits/shell/shell_cubit.dart';
 import 'package:plantly_app/features/plant/garden_plant.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
-import 'package:plantly_app/features/user/user.dart';
 import 'package:plantly_app/widgets/home/home_greeting_widget.dart';
 import 'package:plantly_app/widgets/home/home_metric_grid.dart';
 import 'package:plantly_app/widgets/home/home_reminder_card.dart';

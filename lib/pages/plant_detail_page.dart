@@ -166,6 +166,7 @@ class _PlantDetailView extends StatelessWidget {
                       prefixIcon: Icon(Icons.edit_rounded),
                     ),
                   ),
+                  const SizedBox(height: 14),
                   const SizedBox(height: 18),
                   _InfoCard(
                     title: 'Cura',
