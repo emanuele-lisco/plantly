@@ -9,6 +9,7 @@ import 'package:plantly_app/pages/plant_search_page.dart';
 import 'package:plantly_app/repositories/garden_repository.dart';
 import 'package:plantly_app/repositories/plant_repository.dart';
 import 'package:plantly_app/repositories/smart_pot_repository.dart';
+import 'package:plantly_app/widgets/navigation/app_drawer.dart';
 import '../widgets/bottom_appbar/plantly_bottom_navigation.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
@@ -57,6 +58,8 @@ class MainShellPage extends StatelessWidget {
           builder: (context, currentIndex) {
             return Scaffold(
               extendBody: true,
+              // ── Drawer accessibile da tutta la shell ─────────────
+              drawer: const AppDrawer(),
               body: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 240),
                 child: IndexedStack(

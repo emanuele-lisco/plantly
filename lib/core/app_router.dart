@@ -10,17 +10,20 @@ import 'package:plantly_app/cubits/garden/garden_cubit.dart';
 import 'package:plantly_app/cubits/plant_details/plant_details_cubit.dart';
 import 'package:plantly_app/cubits/sign_in/sign_in_cubit.dart';
 import 'package:plantly_app/cubits/sign_up/sign_up_cubit.dart';
+import 'package:plantly_app/cubits/weather/weather_cubit.dart';
 import 'package:plantly_app/features/plant/plant_species.dart';
 import 'package:plantly_app/features/user/user.dart';
 import 'package:plantly_app/pages/google_profile_completion_page.dart';
 import 'package:plantly_app/pages/main_shell_page.dart';
 import 'package:plantly_app/pages/plant_detail_page.dart';
+import 'package:plantly_app/pages/weather_page.dart';
 import 'package:plantly_app/pages/auth/sign_in_page.dart';
 import 'package:plantly_app/pages/auth/sign_up_page.dart';
 import 'package:plantly_app/pages/initial/splash_screen.dart';
 import 'package:plantly_app/repositories/garden_repository.dart';
 import 'package:plantly_app/repositories/plant_repository.dart';
 import 'package:plantly_app/repositories/user_repository.dart';
+import 'package:plantly_app/repositories/weather_repository.dart';
 
 import 'routes.dart';
 
@@ -69,6 +72,19 @@ class AppRouter {
           builder: (_) => const MainShellPage(),
         );
 
+      // ── Meteo ────────────────────────────────────────────────────────────
+      case Routes.weather:
+        return MaterialPageRoute(
+          builder: (ctx) => RepositoryProvider(
+            create: (_) => WeatherRepository(),
+            child: BlocProvider(
+              create: (ctx) => WeatherCubit(
+                weatherRepository: ctx.read<WeatherRepository>(),
+              ),
+              child: const WeatherPage(),
+            ),
+          ),
+        );
 
       case Routes.plantDetails:
         final args = settings.arguments;
