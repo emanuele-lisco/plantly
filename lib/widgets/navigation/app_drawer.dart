@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:plantly_app/blocs/auth/auth_bloc.dart';
 import 'package:plantly_app/cubits/profile/profile_cubit.dart';
-import 'package:plantly_app/cubits/shell/shell_cubit.dart';
 import 'package:plantly_app/cubits/sign_out/sign_out_cubit.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 import 'package:plantly_app/features/user/user.dart';
+import 'package:go_router/go_router.dart';
+import 'package:plantly_app/core/routes.dart';
 
-import '../../pages/profile_page.dart';
 
 /// Drawer principale dell'app.
 ///
@@ -26,9 +26,11 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final firebaseUser = context.watch<AuthBloc>().state.user;
     final profileState = context.watch<ProfileCubit>().state;
-    final profileUser = profileState is ProfileLoaded ? profileState.user : null;
+    final profileUser =
+        profileState is ProfileLoaded ? profileState.user : null;
 
-    final displayName = _resolveDisplayName(profileUser, firebaseUser?.displayName);
+    final displayName =
+        _resolveDisplayName(profileUser, firebaseUser?.displayName);
     final handle = profileUser != null && profileUser.username.trim().isNotEmpty
         ? '@${profileUser.username.trim()}'
         : firebaseUser?.email ?? '';
@@ -58,19 +60,8 @@ class AppDrawer extends StatelessWidget {
                 circular: circular,
               ),
               onTap: () {
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) => const ProfilePage(),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                      var tween = Tween(begin: const Offset(1.0, 0.0), end: Offset.zero)
-                          .chain(CurveTween(curve: Curves.easeInOut));
-                      return SlideTransition(position: animation.drive(tween), child: child);
-                    },
-                    transitionDuration: const Duration(milliseconds: 500),
-                  ),
-                );
-
+                Navigator.of(context).pop();
+                context.go(Routes.profile);
               },
             ),
 
@@ -83,7 +74,7 @@ class AppDrawer extends StatelessWidget {
               label: 'Meteo',
               onTap: () {
                 Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/weather');
+                context.push(Routes.weather);
               },
             ),
             _DrawerTile(
@@ -91,8 +82,7 @@ class AppDrawer extends StatelessWidget {
               label: 'Profilo',
               onTap: () {
                 Navigator.of(context).pop();
-                // Tab 3 = Profilo nella MainShellPage
-                context.read<ShellCubit>().selectTab(3);
+                context.go(Routes.profile);
               },
             ),
 
@@ -169,7 +159,7 @@ class _DrawerHeader extends StatelessWidget {
     return Container(
       height: 200,
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-      decoration:  BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LightTheme.profileGradient,
         borderRadius: BorderRadius.only(topRight: Radius.circular(circular)),
       ),
@@ -187,7 +177,7 @@ class _DrawerHeader extends StatelessWidget {
               color: Colors.white,
               fontWeight: FontWeight.w800,
             ),
-           overflow: TextOverflow.ellipsis,
+            overflow: TextOverflow.ellipsis,
           ),
 
           // Handle o email

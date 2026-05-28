@@ -5,6 +5,8 @@ import 'package:plantly_app/cubits/weather/weather_cubit.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 import 'package:plantly_app/widgets/weather/weather_location_missing_card.dart';
 import 'package:plantly_app/widgets/weather/weather_summary_card.dart';
+import 'package:go_router/go_router.dart';
+import 'package:plantly_app/core/routes.dart';
 
 /// Pagina meteo semplice.
 ///
@@ -88,8 +90,8 @@ class _WeatherPageState extends State<WeatherPage> {
           ),
         ),
       WeatherNoLocation() => WeatherLocationMissingCard(
-          onGoToProfile: () => Navigator.of(context).pop(),
-        ),
+        onGoToProfile: () => context.go(Routes.profile),
+      ),
       WeatherLoaded(:final data) => WeatherSummaryCard(data: data),
       WeatherFailure(:final message) => _WeatherErrorView(
           message: message,

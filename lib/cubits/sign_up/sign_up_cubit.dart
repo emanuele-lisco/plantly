@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+
 import '../../features/user/user.dart';
 import '../../repositories/auth_repository.dart';
 import '../../repositories/user_repository.dart';
@@ -72,7 +73,12 @@ class SignUpCubit extends Cubit<SignUpState> {
         rethrow;
       }
 
-      emit(const SignUpSuccess('Registrazione completata con successo'));
+      emit(
+        SignUpSuccess(
+          message: 'Registrazione completata con successo',
+          firebaseUser: authUser,
+        ),
+      );
     } on UserRepositoryException catch (e) {
       emit(SignUpFailure(e.message));
     } on FirebaseAuthException catch (e) {
@@ -90,7 +96,12 @@ class SignUpCubit extends Cubit<SignUpState> {
 
       await _userRepository.ensureGoogleUserProfile(result.user);
 
-      emit(const SignUpSuccess('Accesso con Google completato'));
+      emit(
+        SignUpSuccess(
+          message: 'Accesso con Google completato',
+          firebaseUser: result.user,
+        ),
+      );
     } on GoogleSignInException catch (e) {
       emit(SignUpFailure(_mapGoogleError(e)));
     } on UserRepositoryException catch (e) {

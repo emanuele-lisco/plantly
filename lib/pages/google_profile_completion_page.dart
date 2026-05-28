@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../core/routes.dart';
 import '../cubits/forms/google_profile_completion_form_cubit.dart';
 import '../cubits/google_profile_completion/google_profile_completion_cubit.dart';
+import '../cubits/session/session_cubit.dart';
 import '../features/theme/models/theme.dart';
 import '../widgets/feedback/snackbar_helper.dart';
 import '../widgets/location/city_picker_field.dart';
@@ -19,16 +18,20 @@ class GoogleProfileCompletionPage extends StatelessWidget {
       body: SafeArea(
         child: BlocListener<GoogleProfileCompletionCubit,
             GoogleProfileCompletionState>(
-          listener: (context, state) {
+          listener: (context, state) async {
             if (state is GoogleProfileCompletionSuccess) {
               SnackBarHelper.showSuccess(
                 context,
                 'Profilo completato con successo',
               );
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                Routes.home,
-                    (_) => false,
-              );
+
+              final sessionCubit = context.read<SessionCubit>();
+              final sessionState = sessionCubit.state;
+
+              if (sessionState is SessionAuthenticatedNeedsProfileCompletion) {
+                await sessionCubit
+                    .resolveAuthenticatedUser(sessionState.firebaseUser);
+              }
             } else if (state is GoogleProfileCompletionFailure) {
               SnackBarHelper.showError(context, state.message);
             }
@@ -36,8 +39,7 @@ class GoogleProfileCompletionPage extends StatelessWidget {
           child: BlocBuilder<GoogleProfileCompletionCubit,
               GoogleProfileCompletionState>(
             builder: (context, completionState) {
-              final loading =
-              completionState is GoogleProfileCompletionLoading;
+              final loading = completionState is GoogleProfileCompletionLoading;
 
               return Center(
                 child: SingleChildScrollView(
@@ -83,21 +85,19 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                               .textTheme
                               .displaySmall
                               ?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.5,
-                            color: LightTheme.textPrimary,
-                          ),
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.5,
+                                color: LightTheme.textPrimary,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Completa il tuo profilo per continuare',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                            color: LightTheme.textSecondary,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: LightTheme.textSecondary,
+                                  ),
                         ),
                         const SizedBox(height: 28),
                         // ── Card form ─────────────────────────────────────
@@ -115,8 +115,7 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child: BlocBuilder<
-                              GoogleProfileCompletionFormCubit,
+                          child: BlocBuilder<GoogleProfileCompletionFormCubit,
                               GoogleProfileCompletionFormState>(
                             builder: (context, formState) {
                               final formCubit = context
@@ -166,25 +165,25 @@ class GoogleProfileCompletionPage extends StatelessWidget {
                                     width: double.infinity,
                                     child: loading
                                         ? const Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 12,
-                                        ),
-                                        child:
-                                        CircularProgressIndicator(
-                                          color: LightTheme.primary,
-                                          strokeWidth: 2.5,
-                                        ),
-                                      ),
-                                    )
+                                            child: Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                vertical: 12,
+                                              ),
+                                              child: CircularProgressIndicator(
+                                                color: LightTheme.primary,
+                                                strokeWidth: 2.5,
+                                              ),
+                                            ),
+                                          )
                                         : ElevatedButton.icon(
-                                      onPressed: formCubit.submit,
-                                      icon: const Icon(
-                                        Icons
-                                            .check_circle_outline_rounded,
-                                      ),
-                                      label: const Text('Salva e continua'),
-                                    ),
+                                            onPressed: formCubit.submit,
+                                            icon: const Icon(
+                                              Icons
+                                                  .check_circle_outline_rounded,
+                                            ),
+                                            label:
+                                                const Text('Salva e continua'),
+                                          ),
                                   ),
                                 ],
                               );

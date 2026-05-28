@@ -130,7 +130,7 @@ class _EmptyOrbState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.local_florist_outlined,
+          const Icon(Icons.local_florist_outlined,
               size: 48, color: LightTheme.textMuted),
           const SizedBox(height: 12),
           Text(

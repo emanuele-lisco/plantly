@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:plantly_app/cubits/garden/garden_cubit.dart';
 import 'package:plantly_app/cubits/garden/garden_state.dart';
@@ -7,7 +8,6 @@ import 'package:plantly_app/cubits/plant_details/plant_details_state.dart';
 import 'package:plantly_app/features/plant/plant_species.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 import 'package:plantly_app/widgets/feedback/snackbar_helper.dart';
-
 
 class PlantDetailPage extends StatefulWidget {
   const PlantDetailPage({
@@ -49,7 +49,7 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
 
     if (result.isSuccess) {
       SnackBarHelper.showSuccess(context, result.message);
-      Navigator.of(context).pop();
+      context.pop();
     } else {
       SnackBarHelper.showError(context, result.message);
     }
@@ -283,7 +283,7 @@ class _CircleBackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.of(context).pop(),
+      onTap: () => context.pop(),
       child: Container(
         decoration: BoxDecoration(
           color: LightTheme.surface1.withOpacity(0.88),

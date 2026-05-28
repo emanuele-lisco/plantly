@@ -1,11 +1,12 @@
 import 'dart:async';
 
+import 'package:go_router/go_router.dart';
+import 'package:plantly_app/core/app_router.dart';
+import 'package:plantly_app/core/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:plantly_app/blocs/auth/auth_bloc.dart';
-import 'package:plantly_app/cubits/garden/garden_cubit.dart';
-import 'package:plantly_app/cubits/plant_details/plant_details_cubit.dart';
-import 'package:plantly_app/pages/plant_detail_page.dart';
+
 import 'package:plantly_app/cubits/plant_search/plant_search_cubit.dart';
 import 'package:plantly_app/cubits/plant_search/plant_search_state.dart';
 import 'package:plantly_app/features/plant/plant_species.dart';
@@ -67,25 +68,12 @@ class _PlantSearchViewState extends State<_PlantSearchView> {
 
   void _openPlantDetail(PlantSpecies plant) {
     final userId = context.read<AuthBloc>().state.user?.uid ?? '';
-    final plantRepository = context.read<PlantRepository>();
-    final gardenCubit = context.read<GardenCubit>();
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => MultiBlocProvider(
-          providers: [
-            BlocProvider.value(value: gardenCubit),
-            BlocProvider(
-              create: (_) => PlantDetailsCubit(
-                plantRepository: plantRepository,
-              )..loadPlantDetails(plant),
-            ),
-          ],
-          child: PlantDetailPage(
-            initialPlant: plant,
-            userId: userId,
-          ),
-        ),
+    context.push(
+      Routes.plantDetails,
+      extra: PlantDetailsRouteArgs(
+        plant: plant,
+        userId: userId,
       ),
     );
   }

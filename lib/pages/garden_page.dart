@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:plantly_app/blocs/auth/auth_bloc.dart';
 import 'package:plantly_app/cubits/garden/garden_cubit.dart';
 import 'package:plantly_app/cubits/garden/garden_state.dart';
-import 'package:plantly_app/cubits/shell/shell_cubit.dart';
 import 'package:plantly_app/features/plant/garden_plant.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 import 'package:plantly_app/widgets/feedback/snackbar_helper.dart';
@@ -11,6 +10,8 @@ import 'package:plantly_app/widgets/garden/garden_empty_state.dart';
 import 'package:plantly_app/widgets/garden/garden_header_widget.dart';
 import 'package:plantly_app/widgets/garden/garden_stats_banner.dart';
 import 'package:plantly_app/widgets/garden/plant_card.dart';
+import 'package:go_router/go_router.dart';
+import 'package:plantly_app/core/routes.dart';
 
 class GardenPage extends StatelessWidget {
   const GardenPage({super.key});
@@ -59,7 +60,6 @@ class _GardenContent extends StatelessWidget {
         const Divider(),
         const SizedBox(height: 24),
         Text('Le tue piante', style: textTheme.titleLarge),
-
         const SizedBox(height: 14),
         if (plants.isEmpty) ...[
           const GardenEmptyState(),
@@ -76,7 +76,7 @@ class _GardenContent extends StatelessWidget {
             ),
         ],
         OutlinedButton.icon(
-          onPressed: () => context.read<ShellCubit>().selectTab(2),
+          onPressed: () => context.go(Routes.search),
           icon: const Icon(Icons.add_rounded),
           label: const Text('Aggiungi una pianta'),
         ),
@@ -84,14 +84,12 @@ class _GardenContent extends StatelessWidget {
     );
   }
 
-
   static bool _isWateringDue(GardenPlant plant) {
     final next = plant.nextWateringAt;
     if (next == null) return false;
     final now = DateTime.now().toUtc();
     return !next.isAfter(now);
   }
-
 
   Future<void> _confirmRemove(BuildContext context, GardenPlant plant) async {
     final confirmed = await showDialog<bool>(
@@ -116,9 +114,9 @@ class _GardenContent extends StatelessWidget {
 
     final userId = context.read<AuthBloc>().state.user?.uid ?? '';
     final result = await context.read<GardenCubit>().removePlant(
-      userId: userId,
-      plantId: plant.id,
-    );
+          userId: userId,
+          plantId: plant.id,
+        );
 
     if (!context.mounted) return;
     if (result.isSuccess) {
@@ -170,7 +168,8 @@ class _GardenErrorView extends StatelessWidget {
               Expanded(
                 child: Text(
                   message,
-                  style: textTheme.bodyMedium?.copyWith(color: LightTheme.textSecondary),
+                  style: textTheme.bodyMedium
+                      ?.copyWith(color: LightTheme.textSecondary),
                 ),
               ),
             ],
@@ -192,7 +191,7 @@ class _GardenErrorView extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () => context.read<ShellCubit>().selectTab(2),
+                onPressed: () => context.go(Routes.search),
                 icon: const Icon(Icons.add_rounded),
                 label: const Text('Cerca piante'),
               ),

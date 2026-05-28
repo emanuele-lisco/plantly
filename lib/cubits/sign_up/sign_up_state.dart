@@ -12,12 +12,16 @@ final class SignUpInitial extends SignUpState {}
 final class SignUpLoading extends SignUpState {}
 
 final class SignUpSuccess extends SignUpState {
-  final String message;
+  const SignUpSuccess({
+    required this.message,
+    required this.firebaseUser,
+  });
 
-  const SignUpSuccess(this.message);
+  final String message;
+  final User firebaseUser;
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, firebaseUser];
 }
 
 final class SignUpFailure extends SignUpState {

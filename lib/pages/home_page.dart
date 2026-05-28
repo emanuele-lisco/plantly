@@ -6,13 +6,14 @@ import 'package:plantly_app/cubits/garden/garden_state.dart';
 import 'package:plantly_app/cubits/home/home_cubit.dart';
 import 'package:plantly_app/cubits/home/home_state.dart';
 import 'package:plantly_app/cubits/profile/profile_cubit.dart';
-import 'package:plantly_app/cubits/shell/shell_cubit.dart';
 import 'package:plantly_app/features/plant/garden_plant.dart';
 import 'package:plantly_app/features/theme/models/theme.dart';
 import 'package:plantly_app/widgets/home/home_greeting_widget.dart';
 import 'package:plantly_app/widgets/home/home_metric_grid.dart';
 import 'package:plantly_app/widgets/home/home_reminder_card.dart';
 import 'package:plantly_app/widgets/home/home_user_card.dart';
+import 'package:go_router/go_router.dart';
+import 'package:plantly_app/core/routes.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -49,7 +50,7 @@ class HomePage extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // ── Card utente compatta ─────────────────────────────
-                  _UserCardSection(gardenState: state),
+                 _UserCardSection(gardenState: state),
                   const SizedBox(height: 22),
 
                   _buildContent(state),
@@ -156,7 +157,7 @@ class _HomeDashboardView extends StatelessWidget {
         icon: Icons.event_available_rounded,
         accent: LightTheme.amber,
       ),
-      HomeMetric(
+      const HomeMetric(
         title: 'Smart pot',
         value: '0',
         icon: Icons.sensors_rounded,
@@ -267,7 +268,7 @@ class _HomeEmptyView extends StatelessWidget {
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: () =>
-                          context.read<ShellCubit>().selectTab(2),
+                          context.go(Routes.search),
                       icon: const Icon(Icons.add_rounded),
                       label: const Text('Aggiungi una pianta'),
                     ),

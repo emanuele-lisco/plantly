@@ -47,7 +47,7 @@ class HomeHeroCard extends StatelessWidget {
                         Container(
                           width: 8,
                           height: 8,
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: LightTheme.sage,
                             shape: BoxShape.circle,
                           ),
@@ -100,16 +100,16 @@ class HomeHeroCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Expanded(
+              const Expanded(
                 child: _HeroStat(
                   icon: Icons.wb_sunny_rounded,
                   label: 'In fioritura',
                   value: '2',
-                  color: const Color(0xFFFCD34D),
+                  color: Color(0xFFFCD34D),
                 ),
               ),
               const SizedBox(width: 8),
-              Expanded(
+              const Expanded(
                 child: _HeroStat(
                   icon: Icons.eco_rounded,
                   label: 'Nuovi',

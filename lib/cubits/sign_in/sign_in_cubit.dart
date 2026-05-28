@@ -26,12 +26,12 @@ class SignInCubit extends Cubit<SignInState> {
       final email =
       await _userRepository.resolveEmailFromIdentifier(identifier);
 
-      await _authRepository.signIn(
+      final user = await _authRepository.signIn(
         email: email,
         password: password,
       );
 
-      emit(SignInSuccess());
+      emit(SignInSuccess(user));
     } on UserRepositoryException catch (e) {
       emit(SignInFailure(e.message));
     } on FirebaseAuthException catch (e) {
@@ -49,7 +49,7 @@ class SignInCubit extends Cubit<SignInState> {
 
       await _userRepository.ensureGoogleUserProfile(result.user);
 
-      emit(SignInSuccess());
+      emit(SignInSuccess(result.user));
     } on GoogleSignInException catch (e) {
       emit(SignInFailure(_mapGoogleError(e)));
     } on UserRepositoryException catch (e) {

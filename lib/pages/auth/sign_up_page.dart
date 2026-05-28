@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:go_router/go_router.dart';
+import '../../core/routes.dart';
 import '../../cubits/custom/obscure/obscure_cubit.dart';
 import '../../cubits/forms/sign_up_form_cubit.dart';
-import '../../cubits/navigation/auth_flow_cubit.dart';
+import '../../cubits/session/session_cubit.dart';
 import '../../cubits/sign_up/sign_up_cubit.dart';
 import '../../features/theme/models/theme.dart';
 import '../../widgets/auth/auth_card.dart';
@@ -23,11 +25,15 @@ class SignUpPage extends StatelessWidget {
       backgroundColor: LightTheme.warmBackground,
       body: SafeArea(
         child: BlocListener<SignUpCubit, SignUpState>(
-          listener: (context, state) {
+          listener: (context, state) async {
             if (state is SignUpFailure) {
               SnackBarHelper.showError(context, state.message);
             } else if (state is SignUpSuccess) {
               SnackBarHelper.showSuccess(context, state.message);
+
+              await context
+                  .read<SessionCubit>()
+                  .resolveAuthenticatedUser(state.firebaseUser);
             }
           },
           child: BlocBuilder<SignUpCubit, SignUpState>(
@@ -123,7 +129,7 @@ class SignUpPage extends StatelessWidget {
                                       hintText: 'Email',
                                       label: const Text('Email'),
                                       prefixIcon:
-                                      const Icon(Icons.email_outlined),
+                                          const Icon(Icons.email_outlined),
                                       errorText: formState.showErrors
                                           ? formState.emailError
                                           : null,
@@ -167,7 +173,7 @@ class SignUpPage extends StatelessWidget {
                                           hintText: 'Password',
                                           label: const Text('Password'),
                                           prefixIcon:
-                                          const Icon(Icons.lock_outline),
+                                              const Icon(Icons.lock_outline),
                                           suffixIcon: IconButton(
                                             onPressed: () => context
                                                 .read<ObscureCubit>()
@@ -175,7 +181,7 @@ class SignUpPage extends StatelessWidget {
                                             icon: Icon(
                                               obs.password
                                                   ? Icons
-                                                  .visibility_off_outlined
+                                                      .visibility_off_outlined
                                                   : Icons.visibility_outlined,
                                               size: 20,
                                               color: LightTheme.textSecondary,
@@ -201,9 +207,9 @@ class SignUpPage extends StatelessWidget {
                                         decoration: InputDecoration(
                                           hintText: 'Conferma Password',
                                           label:
-                                          const Text('Conferma Password'),
+                                              const Text('Conferma Password'),
                                           prefixIcon:
-                                          const Icon(Icons.lock_outline),
+                                              const Icon(Icons.lock_outline),
                                           suffixIcon: IconButton(
                                             onPressed: () => context
                                                 .read<ObscureCubit>()
@@ -211,7 +217,7 @@ class SignUpPage extends StatelessWidget {
                                             icon: Icon(
                                               obs.confirmPassword
                                                   ? Icons
-                                                  .visibility_off_outlined
+                                                      .visibility_off_outlined
                                                   : Icons.visibility_outlined,
                                               size: 20,
                                               color: LightTheme.textSecondary,
@@ -234,22 +240,22 @@ class SignUpPage extends StatelessWidget {
                                     width: double.infinity,
                                     child: loading
                                         ? const Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(
-                                            vertical: 12),
-                                        child: CircularProgressIndicator(
-                                          color: LightTheme.primary,
-                                          strokeWidth: 2.5,
-                                        ),
-                                      ),
-                                    )
+                                            child: Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 12),
+                                              child: CircularProgressIndicator(
+                                                color: LightTheme.primary,
+                                                strokeWidth: 2.5,
+                                              ),
+                                            ),
+                                          )
                                         : ElevatedButton.icon(
-                                      onPressed: () => context
-                                          .read<SignUpFormCubit>()
-                                          .submit(),
-                                      icon: const Icon(Icons.spa_rounded),
-                                      label: const Text('Crea account'),
-                                    ),
+                                            onPressed: () => context
+                                                .read<SignUpFormCubit>()
+                                                .submit(),
+                                            icon: const Icon(Icons.spa_rounded),
+                                            label: const Text('Crea account'),
+                                          ),
                                   ),
                                   const SizedBox(height: 14),
                                   GoogleAuthButton(
@@ -258,17 +264,15 @@ class SignUpPage extends StatelessWidget {
                                     onPressed: loading
                                         ? null
                                         : () => context
-                                        .read<SignUpCubit>()
-                                        .signUpWithGoogle(),
+                                            .read<SignUpCubit>()
+                                            .signUpWithGoogle(),
                                   ),
                                   const SizedBox(height: 14),
                                   Center(
                                     child: TextButton.icon(
                                       onPressed: loading
                                           ? null
-                                          : () => context
-                                          .read<AuthFlowCubit>()
-                                          .goToSignIn(),
+                                          : () => context.go(Routes.signIn),
                                       icon: const Icon(
                                         Icons.arrow_back_rounded,
                                         size: 16,

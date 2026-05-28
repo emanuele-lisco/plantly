@@ -11,7 +11,14 @@ final class SignInInitial extends SignInState {}
 
 final class SignInLoading extends SignInState {}
 
-final class SignInSuccess extends SignInState {}
+final class SignInSuccess extends SignInState {
+  const SignInSuccess(this.firebaseUser);
+
+  final User firebaseUser;
+
+  @override
+  List<Object?> get props => [firebaseUser];
+}
 
 final class SignInFailure extends SignInState {
   final String message;

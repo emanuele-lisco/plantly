@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:go_router/go_router.dart';
+import '../../cubits/session/session_cubit.dart';
+import '../../core/routes.dart';
 import '../../cubits/custom/obscure/obscure_cubit.dart';
 import '../../cubits/forms/sign_in_form_cubit.dart';
-import '../../cubits/navigation/auth_flow_cubit.dart';
 import '../../cubits/sign_in/sign_in_cubit.dart';
 import '../../features/theme/models/theme.dart';
 import '../../widgets/auth/auth_card.dart';
@@ -20,9 +22,13 @@ class SignInPage extends StatelessWidget {
       backgroundColor: LightTheme.warmBackground,
       body: SafeArea(
         child: BlocListener<SignInCubit, SignInState>(
-          listener: (context, state) {
+          listener: (context, state) async {
             if (state is SignInFailure) {
               SnackBarHelper.showError(context, state.message);
+            } else if (state is SignInSuccess) {
+              await context
+                  .read<SessionCubit>()
+                  .resolveAuthenticatedUser(state.firebaseUser);
             }
           },
           child: BlocBuilder<SignInCubit, SignInState>(
@@ -79,14 +85,16 @@ class SignInPage extends StatelessWidget {
                                         decoration: InputDecoration(
                                           hintText: 'Password',
                                           label: const Text('Password'),
-                                          prefixIcon: const Icon(Icons.lock_outline),
+                                          prefixIcon:
+                                              const Icon(Icons.lock_outline),
                                           suffixIcon: IconButton(
                                             onPressed: () => context
                                                 .read<ObscureCubit>()
                                                 .togglePassword(),
                                             icon: Icon(
                                               obscureState.password
-                                                  ? Icons.visibility_off_outlined
+                                                  ? Icons
+                                                      .visibility_off_outlined
                                                   : Icons.visibility_outlined,
                                               size: 20,
                                               color: LightTheme.textSecondary,
@@ -104,22 +112,23 @@ class SignInPage extends StatelessWidget {
                                     width: double.infinity,
                                     child: loading
                                         ? const Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(
-                                            vertical: 12),
-                                        child: CircularProgressIndicator(
-                                          color: LightTheme.primary,
-                                          strokeWidth: 2.5,
-                                        ),
-                                      ),
-                                    )
+                                            child: Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 12),
+                                              child: CircularProgressIndicator(
+                                                color: LightTheme.primary,
+                                                strokeWidth: 2.5,
+                                              ),
+                                            ),
+                                          )
                                         : ElevatedButton.icon(
-                                      onPressed: context
-                                          .read<SignInFormCubit>()
-                                          .submit,
-                                      icon: const Icon(Icons.login_rounded),
-                                      label: const Text('Accedi'),
-                                    ),
+                                            onPressed: context
+                                                .read<SignInFormCubit>()
+                                                .submit,
+                                            icon:
+                                                const Icon(Icons.login_rounded),
+                                            label: const Text('Accedi'),
+                                          ),
                                   ),
                                   const SizedBox(height: 16),
                                   const _OrDivider(),
@@ -130,17 +139,15 @@ class SignInPage extends StatelessWidget {
                                     onPressed: loading
                                         ? null
                                         : () => context
-                                        .read<SignInCubit>()
-                                        .signInWithGoogle(),
+                                            .read<SignInCubit>()
+                                            .signInWithGoogle(),
                                   ),
                                   const SizedBox(height: 20),
                                   Center(
                                     child: TextButton.icon(
                                       onPressed: loading
                                           ? null
-                                          : () => context
-                                          .read<AuthFlowCubit>()
-                                          .goToSignUp(),
+                                          : () => context.go(Routes.signUp),
                                       icon: const Icon(
                                         Icons.person_add_alt_1_rounded,
                                         size: 16,

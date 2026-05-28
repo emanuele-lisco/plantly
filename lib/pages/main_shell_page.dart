@@ -1,28 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:plantly_app/blocs/auth/auth_bloc.dart';
 import 'package:plantly_app/cubits/garden/garden_cubit.dart';
 import 'package:plantly_app/cubits/home/home_cubit.dart';
-import 'package:plantly_app/cubits/shell/shell_cubit.dart';
-import 'package:plantly_app/pages/garden_page.dart';
-import 'package:plantly_app/pages/plant_search_page.dart';
 import 'package:plantly_app/repositories/garden_repository.dart';
 import 'package:plantly_app/repositories/plant_repository.dart';
 import 'package:plantly_app/repositories/smart_pot_repository.dart';
+import 'package:plantly_app/widgets/bottom_appbar/plantly_bottom_navigation.dart';
 import 'package:plantly_app/widgets/navigation/app_drawer.dart';
-import '../widgets/bottom_appbar/plantly_bottom_navigation.dart';
-import 'home_page.dart';
-import 'profile_page.dart';
 
 class MainShellPage extends StatelessWidget {
-  const MainShellPage({super.key});
+  const MainShellPage({
+    super.key,
+    required this.navigationShell,
+  });
 
-  static const List<Widget> _pages = [
-    HomePage(),
-    GardenPage(),
-    PlantSearchPage(),
-    ProfilePage(),
-  ];
+  final StatefulNavigationShell navigationShell;
 
   @override
   Widget build(BuildContext context) {
@@ -42,41 +36,33 @@ class MainShellPage extends StatelessWidget {
       ],
       child: MultiBlocProvider(
         providers: [
-          BlocProvider(create: (_) => ShellCubit()),
           BlocProvider(
-            create: (ctx) => GardenCubit(
-              gardenRepository: ctx.read<GardenRepository>(),
+            create: (context) => GardenCubit(
+              gardenRepository: context.read<GardenRepository>(),
             )..watchGarden(user.uid),
           ),
           BlocProvider(
-            create: (ctx) => HomeCubit(
-              gardenRepository: ctx.read<GardenRepository>(),
+            create: (context) => HomeCubit(
+              gardenRepository: context.read<GardenRepository>(),
             )..watchHome(user.uid),
           ),
         ],
-        child: BlocBuilder<ShellCubit, int>(
-          builder: (context, currentIndex) {
-            return Scaffold(
-              extendBody: true,
-              // ── Drawer accessibile da tutta la shell ─────────────
-              drawer: const AppDrawer(),
-              body: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 240),
-                child: IndexedStack(
-                  key: ValueKey(currentIndex),
-                  index: currentIndex,
-                  children: _pages,
-                ),
-              ),
-              bottomNavigationBar: SafeArea(
-                top: false,
-                child: PlantlyBottomNav(
-                  currentIndex: currentIndex,
-                  onTap: context.read<ShellCubit>().selectTab,
-                ),
-              ),
-            );
-          },
+        child: Scaffold(
+          extendBody: true,
+          drawer: const AppDrawer(),
+          body: navigationShell,
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: PlantlyBottomNav(
+              currentIndex: navigationShell.currentIndex,
+              onTap: (index) {
+                navigationShell.goBranch(
+                  index,
+                  initialLocation: index == navigationShell.currentIndex,
+                );
+              },
+            ),
+          ),
         ),
       ),
     );

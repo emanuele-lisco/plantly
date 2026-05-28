@@ -65,7 +65,7 @@ Future<void> main() async {
                 create: (_) => ProfileCubit(userRepository: userRepository),
               ),
             ],
-            child: App(),
+            child: const App(),
           ),
         ),
       );
