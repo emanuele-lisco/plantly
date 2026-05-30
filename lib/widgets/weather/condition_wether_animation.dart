@@ -38,8 +38,7 @@ class WeatherAnimation extends StatelessWidget {
     final animationPath = switch (condition) {
       'Sereno' => _isNight ? _notte : _soleggiato1,
       'Principalmente sereno' => _isNight ? _notte : _soleggiato2,
-      'Parzialmente nuvoloso' =>
-      _isNight ? _notte : _parzialmenteNuvoloso,
+      'Parzialmente nuvoloso' => _isNight ? _notte : _parzialmenteNuvoloso,
       'Coperto' => _nuvoloso,
       'Nebbia' => _nebbia,
       'Pioviggine' => _pioviggine,

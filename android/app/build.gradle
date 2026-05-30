@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "it.fudeo.my_garden"
+    namespace = "com.plantly.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

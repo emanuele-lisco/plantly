@@ -78,7 +78,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         flexibleSpace: FlexibleSpaceBar(
                           collapseMode: CollapseMode.pin,
                           background: SafeArea(
-                            bottom: false,
+                            top: false,
                             child: ProfileHeaderWidget(
                               initials: initials,
                               displayName: displayName,
@@ -98,7 +98,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Informazioni personali
                               const _SectionLabel(
                                   label: 'Informazioni personali'),
                               const SizedBox(height: 12),

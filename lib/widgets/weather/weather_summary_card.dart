@@ -4,11 +4,22 @@ import 'package:plantly_app/features/weather/weather_data.dart';
 import 'package:plantly_app/widgets/weather/weather_metric_tile.dart';
 
 import 'condition_wether_animation.dart';
+import 'five_day_forecast_card.dart';
 
-/// Card che mostra il riepilogo meteo del giorno per la città dell'utente.
+/// Card riepilogo meteo — design production-ready.
 ///
-/// Visualizza: condizione, temperatura attuale, min/max, ultimo aggiornamento.
-/// Non mostra dati di irrigazione né consigli sull'annaffiatura.
+/// Struttura:
+/// 1. Hero card (gradiente verde scuro) con:
+///    - città + pin
+///    - animazione Lottie condizione (unica rappresentazione visiva)
+///    - temperatura attuale grande
+///    - riga min/max inline
+/// 2. Griglia 2×2 di metriche secondarie:
+///    - Umidità, Vento, Pioggia, Aggiornamento
+///
+/// Nessuna emoji duplicata: la condizione è rappresentata solo
+/// dall'animazione Lottie nell'hero. Le tile secondarie usano icone
+/// Material, non emoji.
 class WeatherSummaryCard extends StatelessWidget {
   const WeatherSummaryCard({super.key, required this.data});
 
@@ -21,30 +32,38 @@ class WeatherSummaryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Hero condition ───────────────────────────────────────────
+        // ── Hero card ────────────────────────────────────────────────────────
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(22, 22, 22, 26),
           decoration: BoxDecoration(
             gradient: LightTheme.heroGradient,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: LightTheme.primaryDark.withOpacity(0.22),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Locality row
               Row(
                 children: [
                   const Icon(
                     Icons.location_on_rounded,
-                    color: Colors.white70,
-                    size: 16,
+                    color: Colors.white60,
+                    size: 15,
                   ),
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
                       data.locationLabel,
-                      style: t.bodyMedium?.copyWith(
-                        color: Colors.white70,
+                      style: t.bodySmall?.copyWith(
+                        color: Colors.white60,
                         fontSize: 13,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -52,47 +71,129 @@ class WeatherSummaryCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              WeatherAnimation(condition: data.condition, dt: data.fetchedAt),
-              const SizedBox(height: 8),
-              Text(
-                data.temperatureDisplay,
-                style: t.displaySmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
+
+              const SizedBox(height: 18),
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  WeatherAnimation(
+                    condition: data.condition,
+                    dt: data.fetchedAt,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          data.temperatureDisplay,
+                          style: t.displayLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 44,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                        Text(
+                          data.condition,
+                          style: t.bodyLarge?.copyWith(
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                data.condition,
-                style: t.bodyLarge?.copyWith(color: Colors.white70),
+
+              const SizedBox(height: 16),
+
+              // Min / Max inline pill
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.thermostat_rounded,
+                      size: 15,
+                      color: Colors.white70,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Min / Max  ${data.minMaxDisplay}',
+                      style: t.bodySmall?.copyWith(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
 
-        // ── Metriche ─────────────────────────────────────────────────
-        WeatherMetricTile(
-          label: 'Min / Max oggi',
-          value: data.minMaxDisplay,
-          icon: Icons.thermostat_rounded,
-          accent: LightTheme.water,
+        // ── Griglia metriche 2×2 ────────────────────────────────────────────
+        Row(
+          children: [
+            Expanded(
+              child: WeatherMetricTile(
+                label: 'Umidità',
+                value: '${data.humidity}%',
+                icon: Icons.water_drop_outlined,
+                accent: LightTheme.water,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: WeatherMetricTile(
+                label: 'Vento',
+                value: '${data.windSpeedKmh.toStringAsFixed(1)} km/h',
+                icon: Icons.air_rounded,
+                accent: LightTheme.sage,
+              ),
+            ),
+          ],
         ),
+
         const SizedBox(height: 10),
-        WeatherMetricTile(
-          label: 'Condizione',
-          value: '${data.conditionIcon} ${data.condition}',
-          icon: Icons.wb_sunny_rounded,
-          accent: LightTheme.amber,
+
+        Row(
+          children: [
+            Expanded(
+              child: WeatherMetricTile(
+                label: 'Pioggia oggi',
+                value: '${data.precipitationProbability}%',
+                icon: Icons.umbrella_rounded,
+                accent: LightTheme.water,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: WeatherMetricTile(
+                label: 'Aggiornato',
+                value: _formatFetchedAt(data.fetchedAt),
+                icon: Icons.schedule_rounded,
+                accent: LightTheme.textMuted,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 10),
-        WeatherMetricTile(
-          label: 'Ultimo aggiornamento',
-          value: _formatFetchedAt(data.fetchedAt),
-          icon: Icons.update_rounded,
-          accent: LightTheme.sage,
+        const SizedBox(height: 24),
+        FiveDayForecastCard(
+          forecast: data.forecast,
         ),
       ],
     );
@@ -104,6 +205,6 @@ class WeatherSummaryCard extends StatelessWidget {
     final m = local.minute.toString().padLeft(2, '0');
     final day = local.day.toString().padLeft(2, '0');
     final month = local.month.toString().padLeft(2, '0');
-    return '$day/$month alle $h:$m';
+    return '$day/$month · $h:$m';
   }
 }

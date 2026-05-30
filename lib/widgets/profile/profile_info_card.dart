@@ -98,11 +98,6 @@ class _InfoRow extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(
-            Icons.chevron_right_rounded,
-            size: 18,
-            color: LightTheme.textMuted,
-          ),
         ],
       ),
     );

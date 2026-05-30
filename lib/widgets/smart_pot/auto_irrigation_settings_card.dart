@@ -256,9 +256,7 @@ class _AutoSettingsFormState extends State<_AutoSettingsForm> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _autoEnabled
-                          ? 'Configura soglie e limiti. Per ora Plantly salva solo la configurazione.'
-                          : 'Attivala per configurare soglie e quantità d’acqua. I comandi automatici arriveranno in una fase successiva.',
+                      _autoEnabled  ? 'Configura soglie e limiti. Per ora Plantly salva solo la configurazione.' : 'Attiva modalità automatica',
                       style: textTheme.bodySmall?.copyWith(
                         color: LightTheme.textMuted,
                         height: 1.3,

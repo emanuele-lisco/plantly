@@ -1,4 +1,4 @@
-package it.fudeo.my_garden
+package com.plantly.app
 
 import io.flutter.embedding.android.FlutterActivity
 

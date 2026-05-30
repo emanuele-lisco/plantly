@@ -33,117 +33,126 @@ class ProfileHeaderWidget extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      color: LightTheme.canvas,
+      decoration: const BoxDecoration(
+        color: const Color(0xFFD6DBD0),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(60),
+        ),
+      ),
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ── Avatar ────────────────────────────────────────────────────
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: 88,
-                height: 88,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: LightTheme.sage.withOpacity(0.2),
-                  border: Border.all(
-                    color: LightTheme.border,
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.07),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: imageUrl != null && imageUrl!.isNotEmpty
-                      ? Image.network(
-                    imageUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        _InitialsFallback(initials: initials),
-                  )
-                      : _InitialsFallback(initials: initials),
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 26,
-                  height: 26,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 32.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Avatar ────────────────────────────────────────────────────
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 88,
+                  height: 88,
                   decoration: BoxDecoration(
-                    color: LightTheme.surface2,
                     shape: BoxShape.circle,
-                    border: Border.all(color: LightTheme.border, width: 1.5),
+                    color: LightTheme.sage.withOpacity(0.2),
+                    border: Border.all(
+                      color: LightTheme.border,
+                      width: 2,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
+                        color: Colors.black.withOpacity(0.07),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.edit_rounded,
-                    size: 12,
-                    color: LightTheme.primary,
+                  child: ClipOval(
+                    child: imageUrl != null && imageUrl!.isNotEmpty
+                        ? Image.network(
+                      imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          _InitialsFallback(initials: initials),
+                    )
+                        : _InitialsFallback(initials: initials),
                   ),
                 ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 14),
-
-          // ── Nome ──────────────────────────────────────────────────────
-          Text(
-            displayName,
-            style: t.titleLarge?.copyWith(
-              color: LightTheme.textPrimary,
-              fontWeight: FontWeight.w700,
-              fontSize: 20,
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: LightTheme.surface2,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: LightTheme.border, width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.edit_rounded,
+                      size: 12,
+                      color: LightTheme.primary,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
 
-          if (subtitle.isNotEmpty) ...[
-            const SizedBox(height: 5),
+            const SizedBox(height: 14),
+
+            // ── Nome ──────────────────────────────────────────────────────
             Text(
-              subtitle,
-              style: t.bodyMedium?.copyWith(
-                color: LightTheme.textSecondary,
-                fontSize: 13,
+              displayName,
+              style: t.titleLarge?.copyWith(
+                color: LightTheme.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 20,
               ),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-          ],
 
-          // ── Bio ───────────────────────────────────────────────────────
-          if (bio != null && bio!.trim().isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              bio!,
-              style: t.bodyMedium?.copyWith(
-                color: LightTheme.textMuted,
-                height: 1.5,
-                fontSize: 13,
+            if (subtitle.isNotEmpty) ...[
+              const SizedBox(height: 5),
+              Text(
+                subtitle,
+                style: t.bodyMedium?.copyWith(
+                  color: LightTheme.textSecondary,
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+            ],
+
+            // ── Bio ───────────────────────────────────────────────────────
+            if (bio != null && bio!.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                bio!,
+                style: t.bodyMedium?.copyWith(
+                  color: LightTheme.textMuted,
+                  height: 1.5,
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

@@ -6,24 +6,23 @@ import '../features/weather/weather_data.dart';
 
 /// Repository che recupera i dati meteo da Open-Meteo.
 ///
-/// Usa esclusivamente le variabili base:
-/// - temperature_2m (attuale)
-/// - temperature_2m_min / temperature_2m_max (giornaliere)
-/// - weathercode (WMO code per condizione testuale)
+/// Variabili richieste:
+/// - current: temperature_2m, weather_code, relative_humidity_2m,
+///            wind_speed_10m
+/// - daily: temperature_2m_min, temperature_2m_max, weather_code,
+///          precipitation_probability_max
 ///
-/// Non calcola né restituisce nessun dato relativo all'irrigazione.
-/// Non persiste dati su Firestore.
+/// forecast_days = 6 → oggi + 5 giorni futuri.
+/// Il giorno corrente viene usato per min/max di oggi.
+/// I giorni 1–5 alimentano WeatherData.forecast.
+///
+/// Questa logica è usata solo per la pagina meteo.
+/// Non è collegata alla logica di irrigazione.
 class WeatherRepository {
   WeatherRepository({http.Client? client}) : _client = client ?? http.Client();
 
   final http.Client _client;
 
-  /// Recupera i dati meteo per le coordinate fornite.
-  ///
-  /// Usa [latitude] e [longitude] per la chiamata API.
-  /// [city] e [countryName] sono passati solo come label display nel model.
-  ///
-  /// Lancia [WeatherRepositoryException] in caso di errore HTTP o parsing.
   Future<WeatherData> fetchWeather({
     required double latitude,
     required double longitude,
@@ -36,10 +35,13 @@ class WeatherRepository {
       {
         'latitude': latitude.toStringAsFixed(4),
         'longitude': longitude.toStringAsFixed(4),
-        'current': 'temperature_2m,weathercode',
-        'daily': 'temperature_2m_min,temperature_2m_max,weathercode',
+        'current':
+        'temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m',
+        'daily':
+        'temperature_2m_min,temperature_2m_max,weather_code,'
+            'precipitation_probability_max',
         'timezone': 'auto',
-        'forecast_days': '1',
+        'forecast_days': '6',
       },
     );
 
@@ -54,15 +56,16 @@ class WeatherRepository {
         );
       }
 
-      final body = jsonDecode(response.body);
-      if (body is! Map<String, dynamic>) {
+      final decodedBody = jsonDecode(response.body);
+
+      if (decodedBody is! Map<String, dynamic>) {
         throw const WeatherRepositoryException(
           'Risposta meteo non valida.',
         );
       }
 
       return _parseResponse(
-        json: body,
+        json: decodedBody,
         city: city,
         countryName: countryName,
       );
@@ -80,27 +83,75 @@ class WeatherRepository {
     required String city,
     required String countryName,
   }) {
-    final current = json['current'] as Map<String, dynamic>?;
-    final daily = json['daily'] as Map<String, dynamic>?;
+    final current = json['current'];
+    final daily = json['daily'];
 
-    if (current == null || daily == null) {
+    if (current is! Map<String, dynamic> ||
+        daily is! Map<String, dynamic>) {
       throw const WeatherRepositoryException(
         'Struttura della risposta meteo non riconosciuta.',
       );
     }
 
     final tempCurrent = _readDouble(current['temperature_2m']);
-    final weatherCode = _readInt(current['weathercode']);
+    final weatherCodeRaw = current['weather_code'] ?? current['weathercode'];
+    final weatherCode = _readInt(weatherCodeRaw);
+    final humidity = _readInt(current['relative_humidity_2m']);
+    final windSpeed = _readDouble(current['wind_speed_10m']);
 
+    final timeList = daily['time'];
     final minList = daily['temperature_2m_min'];
     final maxList = daily['temperature_2m_max'];
+    final codeList = daily['weather_code'] ?? daily['weathercode'];
+    final precipList = daily['precipitation_probability_max'];
 
-    final tempMin = minList is List && minList.isNotEmpty
-        ? _readDouble(minList.first)
+    final todayMin = minList is List && minList.isNotEmpty
+        ? _readDouble(minList[0])
         : tempCurrent;
-    final tempMax = maxList is List && maxList.isNotEmpty
-        ? _readDouble(maxList.first)
+
+    final todayMax = maxList is List && maxList.isNotEmpty
+        ? _readDouble(maxList[0])
         : tempCurrent;
+
+    final todayPrecipitationProbability =
+    precipList is List && precipList.isNotEmpty
+        ? _readInt(precipList[0])
+        : 0;
+
+    final forecast = <DailyForecast>[];
+
+    if (timeList is List &&
+        minList is List &&
+        maxList is List &&
+        codeList is List) {
+      for (var i = 1; i < timeList.length && i <= 5; i++) {
+        final rawDate = timeList[i];
+
+        final date = rawDate is String
+            ? DateTime.tryParse(rawDate) ??
+            DateTime.now().add(Duration(days: i))
+            : DateTime.now().add(Duration(days: i));
+
+        final minTemperature =
+        i < minList.length ? _readDouble(minList[i]) : todayMin;
+
+        final maxTemperature =
+        i < maxList.length ? _readDouble(maxList[i]) : todayMax;
+
+        final code = i < codeList.length ? _readInt(codeList[i]) : 0;
+        final condition = weatherConditionFromCode(code);
+
+        forecast.add(
+          DailyForecast(
+            date: date,
+            minTemperatureCelsius: minTemperature,
+            maxTemperatureCelsius: maxTemperature,
+            condition: condition.label,
+            conditionIcon: condition.icon,
+          ),
+        );
+      }
+    }
 
     final condition = weatherConditionFromCode(weatherCode);
 
@@ -108,10 +159,14 @@ class WeatherRepository {
       city: city,
       countryName: countryName,
       temperatureCelsius: tempCurrent,
-      minTemperatureCelsius: tempMin,
-      maxTemperatureCelsius: tempMax,
+      minTemperatureCelsius: todayMin,
+      maxTemperatureCelsius: todayMax,
       condition: condition.label,
       conditionIcon: condition.icon,
+      humidity: humidity,
+      windSpeedKmh: windSpeed,
+      precipitationProbability: todayPrecipitationProbability,
+      forecast: forecast,
       fetchedAt: DateTime.now(),
     );
   }
