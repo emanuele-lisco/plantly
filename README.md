@@ -1,97 +1,129 @@
-# Plantly — Documentazione tecnica aggiornata
 
 ## 1. Overview del progetto
 
-Plantly è un'app Flutter per la gestione di piante domestiche. Il progetto usa un'architettura pragmatica a livelli con Firebase Auth, Cloud Firestore, Google Sign-In, `flutter_bloc`, `Equatable`, Material 3 e Repository Pattern.
+Plantly è un'app Flutter per la gestione di piante domestiche, con predisposizione progressiva per vaso intelligente, irrigazione manuale/automatica e dati meteo locali.
 
-### Funzionalità presenti
+Il progetto usa una struttura pragmatica a livelli:
+
+- UI in `pages/` e `widgets/`;
+- stato applicativo in `Bloc`/`Cubit`;
+- accesso dati in `repositories/`;
+- modelli di dominio in `features/`;
+- routing e configurazioni trasversali in `core/`.
+
+### Funzionalità presenti nello stato attuale
 
 - autenticazione email/password;
-- login via email o username;
+- login tramite email o username;
 - Google Sign-In;
-- completamento profilo per utenti Google con dati mancanti;
+- completamento profilo per utenti Google con profilo incompleto;
 - profilo utente persistito in Firestore;
 - indice username in Firestore;
+- profilo realtime tramite `ProfileCubit`;
+- routing migrato a `go_router` con `MaterialApp.router`;
+- `StatefulShellRoute.indexedStack` con tab persistenti;
 - shell autenticata con 4 tab: Home, Garden, Cerca, Profilo;
-- routing modulare con `AppRouter`, `AppNavigator`, `AppStateListener`;
-- gestione sessione con `SessionCubit`;
-- gestione tab con `ShellCubit`;
-- helper centralizzato `SnackBarHelper`;
+- drawer laterale con riepilogo utente, voce Meteo, Profilo e Logout;
+- dashboard Home reale collegata al giardino;
 - ricerca piante tramite Perenual;
-- pagina dettaglio pianta;
+- dettaglio pianta;
 - aggiunta pianta al giardino;
 - persistenza giardino in Firestore;
 - lettura realtime del giardino;
 - rimozione pianta dal giardino;
-- irrigazione dall'app disabilitata finché non sarà collegato un vaso intelligente.
+- predisposizione notifiche watering reminder;
+- predisposizione smart pot;
+- smart pot realtime da Firestore;
+- comando manuale “Annaffia ora” tramite documento pending in Firestore;
+- configurazione irrigazione automatica salvata su device;
+- card configurazione automatica con campi visibili solo se la modalità automatica è attiva;
+- pulsante “Usa valori consigliati” nella configurazione automatica;
+- selezione paese/città tramite API esterne;
+- coordinate utente salvate nel profilo;
+- pagina Meteo collegata alla location del profilo;
+- meteo corrente da Open-Meteo;
+- previsione meteo a 5 giorni;
+- UI meteo con card riepilogo, metriche e forecast.
 
 ### Funzionalità ancora non complete
 
-- Home dashboard reale collegata al giardino;
-- smart pot/Arduino completo;
-- notifiche native;
-- formula avanzata di irrigazione;
-- gestione modifica dettagli pianta salvata;
-- regole Firestore definitive da consolidare e testare;
-- pulizia dei vecchi file legacy `UserPlant`, `UserPlantsRepository`, `UserPlantsCubit` se non più usati.
+- firmware/consumer dei comandi smart pot;
+- creazione automatica dei comandi di irrigazione;
+- algoritmo avanzato di irrigazione;
+- integrazione reale delle notifiche native;
+- modifica avanzata dei dettagli della pianta salvata;
+- collegamento effettivo device-pianta tramite UI completa;
+- gestione backend/Cloud Functions per device e comandi;
+- regole Firestore definitive per `devices` e `commands`;
+- pulizia completa del flusso legacy `UserPlant` / `UserPlantsRepository` / `UserPlantsCubit`;
+- verifica completa di `flutter analyze` sul progetto intero.
 
 ---
 
-## 2. Stack tecnico
+## 2. Stato del codice analizzato
 
-Dal codice e dal `pubspec.yaml` risultano usate o disponibili queste dipendenze principali:
+Lo zip contiene:
 
-```yaml
-flutter_bloc: ^8.1.6
-equatable: ^2.0.8
-firebase_core: ^4.6.0
-firebase_auth: ^6.3.0
-cloud_firestore: ^6.3.0
-google_sign_in: ^7.2.0
-http: ^1.2.2
-translator: ^1.0.4
-google_fonts: ^8.0.2
-provider: ^6.1.5
-flutter_secure_storage: ^9.2.2
-uuid: ^4.5.3
+```text
+lib/        135 file Dart
+README.md  documentazione precedente, parzialmente obsoleta e duplicata
 ```
 
-Nota: `provider`, `flutter_secure_storage`, `collection`, `uuid` risultano presenti nel `pubspec.yaml`, ma non necessariamente centrali nel flusso analizzato sotto `lib/`.
+Distribuzione principale dei file Dart:
+
+```text
+widgets/        47
+cubits/         37
+features/       15
+pages/          11
+repositories/   10
+core/            6
+services/        3
+blocs/           3
+```
+
+La documentazione precedente conteneva alcune sezioni non più allineate al codice, in particolare:
+
+- riferimenti al vecchio routing con `MaterialApp`, `AppNavigator` e `generateRoute`;
+- Home descritta come ancora statica, mentre ora è collegata a `HomeCubit` e al giardino reale;
+- meteo descritto come solo predisposto, mentre ora esistono `WeatherPage`, `WeatherCubit`, `WeatherRepository` e forecast a 5 giorni;
+- smart pot descritto in parte come futura implementazione, mentre ora esistono modelli, repository, cubit e widget dedicati;
+- sezioni duplicate e numerazione non coerente.
 
 ---
 
-## 3. Architettura reale
-
-Il progetto segue una separazione a livelli semplice e coerente:
+## 3. Architettura attuale
 
 ```text
 lib/
   main.dart                 bootstrap Flutter/Firebase
-  app.dart                  composition root UI
+  app.dart                  MaterialApp.router + GoRouter
   firebase_options.dart     configurazione Firebase
 
-  core/                     routing, parsing, navigator, config API
-  blocs/                    bloc globali, soprattutto AuthBloc
-  cubits/                   logica applicativa e stati locali/globali
-  features/                 modelli e risorse trasversali
-  repositories/             accesso dati Firebase/API
+  core/                     router, route constants, parser, config Perenual
+  blocs/                    AuthBloc globale
+  cubits/                   stato applicativo e logica feature
+  features/                 modelli di dominio
+  repositories/             Firebase/API/repository layer
+  services/                 servizi applicativi predisposti
   pages/                    schermate principali
   widgets/                  componenti UI riutilizzabili
 ```
 
-### Regola architetturale da mantenere
+### Regole architetturali da mantenere
 
-- Le `pages/` devono comporre UI e widget.
-- Le chiamate API/Firebase devono stare nei `repositories/`.
-- La logica di stato e di orchestrazione deve stare in `Cubit`/`Bloc`.
-- I modelli devono stare in `features/`.
-- Non usare `setState()` per la logica delle feature principali.
+- Le `pages/` compongono UI, widget e provider locali.
+- Le chiamate a Firebase/API stanno nei `repositories/`.
+- La logica di stato/orchestrazione sta in `Cubit`/`Bloc`.
+- I modelli stanno in `features/`.
+- La logica business non deve finire nelle pages.
+- `setState()` è accettabile solo per stato UI locale, ad esempio controller, debounce o switch grafici interni.
 
-Nel codice corrente non risultano chiamate reali a `setState()`. Restano `StatefulWidget` dove servono controller UI o debounce, ad esempio in `PlantDetailPage`, `PlantSearchPage`, `ProfilePage` e `SplashScreen`.
+Nel codice attuale `setState()` compare solo in widget locali come city picker e form di configurazione automatica. Non risulta usato per orchestrare business logic delle feature principali.
 
 ---
 
-## 4. Entry point e bootstrap
+## 4. Bootstrap e composition root
 
 ### `main.dart`
 
@@ -99,12 +131,12 @@ Responsabilità:
 
 - inizializza Flutter;
 - imposta `FlutterError.onError`;
-- abilita modalità immersiva sticky;
+- abilita `SystemUiMode.immersiveSticky`;
 - inizializza Firebase;
 - crea `AuthRepository` e `UserRepository`;
-- registra repository e cubit/bloc globali;
-- avvia `App`;
-- mostra una fallback UI se Firebase fallisce l'inizializzazione.
+- registra repository e bloc/cubit globali;
+- monta `App`;
+- mostra una fallback UI in caso di errore bootstrap Firebase.
 
 Provider globali registrati:
 
@@ -122,18 +154,18 @@ BlocProvider<ProfileCubit>
 
 Responsabilità:
 
-- registra `AuthFlowCubit`;
-- registra `SessionCubit`;
-- crea `MaterialApp`;
-- collega `AppNavigator.navigatorKey`;
-- collega `AppRouter.generateRoute`;
-- monta `AppStateListener` nel builder globale.
+- crea `SessionCubit`;
+- crea `GoRouterRefreshStream` collegato al `SessionCubit`;
+- crea il router tramite `AppRouter.createRouter()`;
+- monta `MaterialApp.router`;
+- applica `LightTheme.make`;
+- mantiene `AppStateListener` come listener globale.
 
-`app.dart` è oggi un composition root leggero e non contiene logica diretta di navigazione auth.
+Il vecchio schema `MaterialApp + onGenerateRoute + AppNavigator` non è più lo schema reale del codice analizzato.
 
 ---
 
-## 5. Core
+## 5. Routing con `go_router`
 
 ### `core/routes.dart`
 
@@ -143,157 +175,198 @@ Route dichiarate:
 /
 /sign-in
 /sign-up
-/home
 /google-profile-completion
+/home
+/garden
+/search
+/profile
 /plant-details
+/weather
 ```
 
 ### `core/app_router.dart`
 
-Gestisce le route principali:
+Il routing è ora centralizzato in `GoRouter`.
 
-- splash;
-- sign in;
-- sign up;
-- home/shell;
-- plant details;
-- completamento profilo Google;
-- fallback route.
+Componenti principali:
 
-Nota tecnica: la route `Routes.plantDetails` crea un `PlantDetailsCubit` e un `GardenCubit` dedicati. Tuttavia, nel flusso reale della Search, `PlantSearchPage` apre il dettaglio con `MaterialPageRoute` e passa il `GardenCubit` condiviso tramite `BlocProvider.value`. Questo è corretto per mantenere sincronizzato il giardino, ma crea una piccola duplicazione di strategia di navigazione.
+- `navigatorKey` root;
+- navigator key separate per Home, Garden, Search e Profile;
+- `redirect` basato su `SessionCubit`;
+- `StatefulShellRoute.indexedStack` per mantenere le tab montate;
+- route root per `PlantDetailPage`;
+- route root per `WeatherPage`;
+- pagina errore interna per route non valide o args mancanti.
 
-### `core/app_navigator.dart`
+### Logica redirect
 
-Centralizza:
+Il redirect gestisce:
 
-- `navigatorKey`;
-- `navigateReplace`;
-- `push`;
-- `pushReplacement`.
+```text
+SessionInitial / SessionLoading
+  -> resta o torna a Splash
 
-### `core/app_state_listener.dart`
+SessionUnauthenticated / SessionFailure
+  -> consente solo SignIn/SignUp, altrimenti manda a SignIn
 
-Ascolta:
+SessionAuthenticatedNeedsProfileCompletion
+  -> manda a GoogleProfileCompletion
 
-- `AuthBloc`;
-- `SessionCubit`;
-- `AuthFlowCubit`.
-
-Gestisce la navigazione globale tra:
-
-- splash;
-- sign in;
-- sign up;
-- home;
-- completamento profilo Google.
-
-### `core/parse_from_json.dart`
-
-File trasversale per parsing robusto di:
-
-- stringhe;
-- stringhe nullable;
-- liste di stringhe;
-- bool;
-- numeri;
-- `DateTime`;
-- `Timestamp` Firestore.
-
-È usato dai modelli `PlantlyUser`, `PlantSpecies`, `GardenPlant` e dai modelli legacy.
-
-### `core/perenual_config.dart`
-
-Centralizza configurazione API Perenual:
-
-```dart
-PERENUAL_BASE_URL
-PERENUAL_API_KEY
+SessionAuthenticatedComplete
+  -> se è su Splash/Auth/Completion manda a Home
 ```
 
-Come avviare l'app:
+Questa migrazione risolve il problema della navigazione manuale dopo login/registrazione: il cambio di stato sessione guida automaticamente la destinazione.
 
-```bash
-flutter run --dart-define=PERENUAL_API_KEY=LA_TUA_KEY
-```
+### `go_router_refresh_stream.dart`
+
+Adatta lo stream del `SessionCubit` a `ChangeNotifier`, in modo che `GoRouter` rivaluti il redirect quando cambia la sessione.
+
 ---
 
-## 6. Autenticazione e sessione
+## 6. Shell autenticata
+
+### `pages/main_shell_page.dart`
+
+`MainShellPage` riceve una `StatefulNavigationShell` e registra provider disponibili nelle tab autenticate:
+
+```text
+RepositoryProvider<PlantRepository>
+RepositoryProvider<GardenRepository>
+RepositoryProvider<SmartPotRepository>
+BlocProvider<GardenCubit>
+BlocProvider<HomeCubit>
+```
+
+All'avvio della shell:
+
+```text
+GardenCubit.watchGarden(user.uid)
+HomeCubit.watchHome(user.uid)
+```
+
+La shell contiene:
+
+- `Scaffold` principale;
+- drawer laterale `AppDrawer`;
+- body con `navigationShell`;
+- bottom navigation custom `PlantlyBottomNav`;
+- navigazione tra branch tramite `navigationShell.goBranch()`.
+
+---
+
+## 7. Auth, sessione e profilo
 
 ### `AuthBloc`
 
-`AuthBloc` ascolta `AuthRepository.authStateChanges` e produce:
+Ascolta `AuthRepository.authStateChanges` e produce:
 
 ```text
-unknown
-authenticated
-unauthenticated
+AuthStatus.unknown
+AuthStatus.authenticated
+AuthStatus.unauthenticated
 ```
-
-La subscription gestisce anche errori dello stream auth con fallback a utente nullo.
-
-### `AuthRepository`
-
-Responsabilità:
-
-- login email/password;
-- registrazione email/password;
-- Google Sign-In web/native;
-- logout Firebase e Google;
-- esposizione `currentUser`;
-- esposizione `authStateChanges`.
 
 ### `SessionCubit`
 
 Responsabilità:
 
-- riceve l'utente autenticato;
-- carica il profilo Firestore;
-- distingue utente con profilo completo da utente Google con profilo incompleto;
-- emette stato per `AppStateListener`.
+- risolvere l'utente Firebase autenticato;
+- caricare il profilo Firestore;
+- distinguere utente autenticato completo da utente che deve completare il profilo;
+- emettere stati usati da `GoRouter.redirect`.
 
-### `UserRepository`
+### `AppStateListener`
+
+Ascolta:
+
+- `AuthBloc`, per risolvere/azzerare sessione e profilo;
+- `SessionCubit`, per mostrare errori globali con `SnackBarHelper`.
+
+Nota positiva: il listener confronta anche il cambio UID, non solo il cambio status auth. Questo evita stati sporchi quando cambia account.
+
+### `SignInCubit`
 
 Gestisce:
 
-- `users/{uid}`;
-- `usernames/{usernameLowercase}`;
-- creazione profilo in transaction;
-- aggiornamento profilo in transaction;
-- risoluzione email da username;
-- generazione username per utenti Google;
-- verifica completezza profilo.
+- login con email o username;
+- risoluzione username -> email tramite `UserRepository`;
+- Google Sign-In;
+- mappatura errori Firebase;
+- mappatura completa dei principali `GoogleSignInExceptionCode`.
 
-Struttura Firestore utente:
+### `SignUpCubit`
+
+Gestisce:
+
+- registrazione email/password;
+- creazione profilo `PlantlyUser`;
+- rollback dell'utente Firebase se la creazione profilo Firestore fallisce;
+- registrazione/accesso Google;
+- mappatura errori Firebase e Google.
+
+### `GoogleProfileCompletionCubit`
+
+Completa i profili Google incompleti con:
+
+- username;
+- paese;
+- codice paese;
+- città;
+- coordinate città.
+
+---
+
+## 8. Modello utente e location
+
+### `features/user/user.dart`
+
+`PlantlyUser` include ora i campi necessari per la location strutturata:
 
 ```text
-users/{uid}
-  id
-  username
-  username_lowercase
-  name
-  surname
-  email
-  country
-  city
-  imageUrl
-  bio
-  createdAt
-  updatedAt
+country
+countryCode
+countryName
+city
+latitude
+longitude
+```
 
-usernames/{usernameLowercase}
-  uid
-  email
-  username
-  updatedAt
+`locationLabel` restituisce:
+
+```text
+city, countryName
+```
+
+La location è legata all'utente, non alla singola pianta.
+
+### `LocationRepository`
+
+File:
+
+```text
+lib/repositories/location_repository.dart
+```
+
+Responsabilità:
+
+- caricare paesi da Rest Countries;
+- cercare città tramite Open-Meteo Geocoding API;
+- restituire `CountryOption` e `CityOption`;
+- evitare inserimento manuale libero del paese.
+
+Widget collegati:
+
+```text
+widgets/location/country_picker_field.dart
+widgets/location/city_picker_field.dart
 ```
 
 ---
 
-## 7. Dominio plants/garden
+## 9. Dominio piante e giardino
 
-La vertical slice plants/garden è ora implementata tramite nuovi modelli, repository e cubit dedicati.
-
-### Modello `PlantSpecies`
+### `PlantSpecies`
 
 File:
 
@@ -324,25 +397,16 @@ cycle
 dimension
 ```
 
-Metodi presenti:
+Metodi principali:
 
 ```text
 fromPerenualJson()
 fromJson()
 toJson()
 copyWith()
-Equatable props
 ```
 
-Getter utili:
-
-```text
-imageUrl
-heroImageUrl
-hasUsefulImage
-```
-
-### Modello `GardenPlant`
+### `GardenPlant`
 
 File:
 
@@ -374,24 +438,26 @@ nextWateringAt
 notes
 location
 notificationEnabled
-smartPotId
+deviceId
+smartPotId                 legacy
+targetMoistureMin
+targetMoistureMax
+potSize
+soilType
+drainageLevel
+plantSize
+exposure
 ```
 
-Metodi presenti:
+Nota importante:
 
-```text
-fromJson()
-fromFirestore()
-toJson()
-copyWith()
-Equatable props
-```
-
-Nota: `smartPotId` è già presente come campo nullable, ma la logica smart pot non è ancora implementata.
+- `deviceId` è il campo nuovo da usare;
+- `smartPotId` resta letto per compatibilità con documenti vecchi;
+- `linkedDeviceId` fa fallback da `deviceId` a `smartPotId`.
 
 ---
 
-## 8. Repository plants/garden
+## 10. Repository piante e giardino
 
 ### `PlantRepository`
 
@@ -405,19 +471,11 @@ Responsabilità:
 
 - chiamare Perenual;
 - cercare piante;
-- caricare dettaglio pianta;
+- caricare dettagli pianta;
 - gestire query vuote;
 - gestire API key mancante;
-- gestire timeout;
-- gestire errori HTTP;
-- restituire solo `PlantSpecies`, mai JSON grezzo alla UI.
-
-Metodi:
-
-```dart
-Future<List<PlantSpecies>> searchPlants(String query)
-Future<PlantSpecies?> getPlantDetails(String speciesId)
-```
+- gestire timeout/errori HTTP;
+- restituire `PlantSpecies`, non JSON grezzo alla UI.
 
 Endpoint usati:
 
@@ -434,370 +492,522 @@ File:
 lib/repositories/garden_repository.dart
 ```
 
-Responsabilità:
-
-- leggere realtime il giardino;
-- leggere una lista puntuale del giardino;
-- aggiungere piante;
-- aggiornare piante;
-- rimuovere piante;
-- segnare una pianta come annaffiata;
-- evitare duplicati tramite `speciesId`.
-
 Struttura Firestore usata:
 
 ```text
 users/{uid}/garden/{gardenPlantId}
 ```
 
-Metodi:
+Responsabilità:
 
-```dart
-Stream<List<GardenPlant>> watchGarden(String userId)
-Future<List<GardenPlant>> getGarden(String userId)
-Future<void> addPlantToGarden(String userId, GardenPlant plant)
-Future<void> updateGardenPlant(String userId, GardenPlant plant)
-Future<void> removeGardenPlant(String userId, String plantId)
-Future<void> markAsWatered(String userId, String plantId, DateTime wateredAt)
-Future<bool> plantAlreadyInGarden(String userId, String speciesId)
-```
-
-Nota tecnica: `markAsWatered` esiste nel repository, ma dalla UI il pulsante di irrigazione è disabilitato finché non sarà collegato un vaso intelligente e non saranno disponibili i dati minimi di cura.
+- stream realtime del giardino;
+- lettura one-shot del giardino;
+- aggiunta pianta;
+- aggiornamento pianta;
+- rimozione pianta;
+- mark as watered;
+- prevenzione duplicati tramite `speciesId`.
 
 ---
 
-## 9. Cubit plants/garden
-
-### `PlantSearchCubit`
-
-File:
-
-```text
-lib/cubits/plant_search/plant_search_cubit.dart
-lib/cubits/plant_search/plant_search_state.dart
-```
-
-Stati:
-
-```text
-PlantSearchInitial
-PlantSearchLoading
-PlantSearchSuccess
-PlantSearchEmpty
-PlantSearchFailure
-```
-
-Responsabilità:
-
-- gestire query ricerca;
-- chiamare `PlantRepository`;
-- gestire query vuote;
-- evitare chiamate concorrenti obsolete tramite request id;
-- mostrare errori leggibili.
-
-### `PlantDetailsCubit`
-
-File:
-
-```text
-lib/cubits/plant_details/plant_details_cubit.dart
-lib/cubits/plant_details/plant_details_state.dart
-```
-
-Stati:
-
-```text
-PlantDetailsInitial
-PlantDetailsLoading
-PlantDetailsSuccess
-PlantDetailsFailure
-```
-
-Responsabilità:
-
-- caricare i dettagli della pianta;
-- usare la pianta iniziale come fallback se il dettaglio non è disponibile;
-- non bloccare la UI in caso di fallimento del dettaglio.
-
-### `GardenCubit`
-
-File:
-
-```text
-lib/cubits/garden/garden_cubit.dart
-lib/cubits/garden/garden_state.dart
-```
-
-Stati:
-
-```text
-GardenInitial
-GardenLoading
-GardenSuccess
-GardenEmpty
-GardenFailure
-```
-
-Ogni stato espone anche:
-
-```text
-isActionInProgress
-```
-
-Responsabilità:
-
-- ascoltare realtime il giardino;
-- aggiungere piante da `PlantSpecies`;
-- rimuovere piante;
-- aggiornare piante;
-- segnare come annaffiata a livello repository, ma la UI attuale blocca l'azione;
-- gestire errori leggibili;
-- esporre `GardenMutationResult` per feedback UI.
-
----
-
-## 10. Flusso reale Search -> Detail -> Garden
-
-### 10.1 Ricerca
-
-`PlantSearchPage` crea `PlantSearchCubit` usando il `PlantRepository` fornito nella shell.
-
-La pagina contiene:
-
-- `TextEditingController`;
-- debounce con `Timer`;
-- `SearchBarWidget`;
-- gestione stati search;
-- risultati con `PlantSpeciesCard`.
-
-Nota: l'uso di `StatefulWidget` qui è limitato a controller e debounce. Non risulta uso di `setState()`.
-
-### 10.2 Apertura dettaglio
-
-Quando l'utente tocca una pianta:
-
-```text
-PlantSearchPage
-  -> legge userId da AuthBloc
-  -> legge PlantRepository
-  -> legge GardenCubit condiviso
-  -> apre PlantDetailPage con MaterialPageRoute
-  -> passa GardenCubit con BlocProvider.value
-  -> crea PlantDetailsCubit per il dettaglio
-```
-
-Questa scelta mantiene sincronizzato il `GardenCubit` usato anche da `GardenPage`.
-
-### 10.3 Aggiunta al giardino
-
-`PlantDetailPage` mostra:
-
-- immagine hero;
-- nome comune;
-- nome scientifico;
-- nickname opzionale;
-- acqua;
-- luce;
-- ambiente;
-- tossicità;
-- descrizione se disponibile;
-- CTA “Aggiungi al mio giardino”.
-
-Alla pressione della CTA:
-
-```text
-PlantDetailPage
-  -> GardenCubit.addPlantFromSpecies()
-  -> GardenRepository.addPlantToGarden()
-  -> users/{uid}/garden/{gardenPlantId}
-  -> SnackBarHelper
-  -> pop della pagina dettaglio
-```
-
-### 10.4 Garden reale
-
-`GardenPage` legge `GardenCubit` e mostra:
-
-- loading;
-- empty state;
-- error state;
-- lista reale delle piante;
-- card pianta;
-- tasto rimuovi;
-- CTA “Aggiungi una pianta”.
-
-Il tasto “Annaffia” non è disponibile finché:
-
-- non esiste un `smartPotId`;
-- non sono presenti i dati minimi di cura richiesti;
-- non sarà implementata la gestione smart pot.
-
----
-
-## 11. Pages principali
-
-### `MainShellPage`
-
-Tab presenti:
-
-```text
-HomePage
-GardenPage
-PlantSearchPage
-ProfilePage
-```
-
-Responsabilità:
-
-- legge utente corrente da `AuthBloc`;
-- crea `PlantRepository`;
-- crea `GardenRepository`;
-- crea `ShellCubit`;
-- crea `GardenCubit` e avvia `watchGarden(user.uid)`;
-- gestisce tab con `ShellCubit`;
-- usa `IndexedStack` per mantenere le tab montate.
-
-### `HomePage`
-
-Stato attuale:
-
-- ancora demo/statica;
-- non legge ancora `GardenCubit`;
-- usa widget dedicati in `widgets/home/`.
-
-Prossima fase consigliata: collegarla al giardino reale per mostrare:
-
-- numero piante;
-- prossime cure;
-- alert piante senza smart pot;
-- CTA verso Search/Garden.
-
-### `GardenPage`
-
-Stato attuale:
-
-- reale;
-- legge `GardenCubit`;
-- mostra piante da Firestore;
-- rimuove piante;
-- blocca irrigazione fino a smart pot.
-
-### `PlantSearchPage`
-
-Stato attuale:
-
-- reale;
-- usa Perenual tramite `PlantRepository`;
-- apre dettaglio;
-- nessun dato mock.
-
-Criticità da verificare: nel file è presente un possibile refuso di parentesi doppia in `_InitialSearchState`. Se `flutter analyze` segnala errore sintattico in `plant_search_page.dart`, controllare quella sezione.
-
-### `PlantDetailPage`
-
-Stato attuale:
-
-- reale;
-- usa `PlantDetailsCubit`;
-- usa `GardenCubit` per aggiungere al giardino;
-- usa `TextEditingController` per nickname opzionale;
-- non usa `setState()`.
-
-Criticità minore: in `_sunlightLabel` è presente un `return value.trim();` duplicato, con una riga irraggiungibile. Non dovrebbe rompere il flusso, ma va pulito.
-
-### `ProfilePage`
-
-Stato attuale:
-
-- legge profilo con `ProfileCubit`;
-- avvia `watchProfile(uid)` in `initState()`;
-- usa `SignOutCubit`;
-- usa widget dedicati per header, info, statistiche e logout.
-
----
-
-## 12. Widgets principali
-
-### Garden
-
-```text
-widgets/garden/garden_empty_state.dart
-widgets/garden/garden_header_widget.dart
-widgets/garden/garden_orb_preview.dart
-widgets/garden/garden_stats_banner.dart
-widgets/garden/meter_row.dart
-widgets/garden/plant_card.dart
-```
-
-`PlantCard` ora lavora con `GardenPlant`, supporta immagini URL reali, rimozione, stato irrigazione bloccato e notice dedicata.
+## 11. Flow Search -> Detail -> Garden
 
 ### Search
 
-```text
-widgets/search/plant_info_badge.dart
-widgets/search/plant_species_card.dart
-widgets/search/plant_species_grid.dart
-widgets/search/search_bar_widget.dart
-widgets/search/search_category_chips.dart
-widgets/search/search_coming_soon_card.dart
-```
+`PlantSearchPage`:
 
-Nota: `SearchComingSoonCard` è ormai legacy rispetto alla search reale; può restare non usato oppure essere rimosso in una pulizia futura.
+- crea `PlantSearchCubit`;
+- usa `SearchBarWidget`;
+- applica debounce con `Timer`;
+- non usa `setState()` per business logic;
+- naviga al dettaglio con `context.push(Routes.plantDetails, extra: PlantDetailsRouteArgs(...))`.
 
-### Home
+### Detail
 
-```text
-widgets/home/home_greeting_widget.dart
-widgets/home/home_hero_card.dart
-widgets/home/home_metric_grid.dart
-widgets/home/home_quick_actions.dart
-widgets/home/home_reminder_card.dart
-widgets/home/home_summary_card.dart
-widgets/home/home_tip_card.dart
-```
+`PlantDetailPage`:
 
-Nota: `home_summary_card.dart` e `home_tip_card.dart` risultano vuoti o quasi vuoti nel codice analizzato. Sono candidati a pulizia o completamento.
+- riceve `PlantSpecies` iniziale e `userId`;
+- usa `PlantDetailsCubit` per caricare dettagli aggiuntivi;
+- usa `GardenCubit` per aggiungere al giardino;
+- usa `TextEditingController` per nickname opzionale;
+- mostra feedback con `SnackBarHelper`;
+- torna indietro con `context.pop()` dopo aggiunta riuscita.
 
-### Profile
+### Garden
 
-```text
-widgets/profile/info_card.dart
-widgets/profile/info_user_model.dart
-widgets/profile/logout_button.dart
-widgets/profile/profile_action_tile.dart
-widgets/profile/profile_header_widget.dart
-widgets/profile/profile_info_card.dart
-widgets/profile/profile_stats_row.dart
-widgets/profile/section_label.dart
-widgets/profile/stat_card.dart
-```
+`GardenPage`:
 
-### Feedback
-
-```text
-widgets/feedback/snackbar_helper.dart
-```
-
-Centralizza snackbar di tipo:
-
-- success;
-- error;
-- info;
-- warning.
+- legge `GardenCubit` condiviso nella shell;
+- mostra loading/empty/error/success;
+- mostra piante reali da Firestore;
+- rimuove piante;
+- espone la parte smart pot quando una pianta ha un device collegato;
+- mostra stato bloccato/no device quando non c'è un device.
 
 ---
 
-## 13. Firestore
+## 12. Home dashboard
 
-### Struttura attuale
+### `HomeCubit`
+
+File:
+
+```text
+lib/cubits/home/home_cubit.dart
+lib/cubits/home/home_state.dart
+```
+
+Responsabilità:
+
+- ascoltare il giardino reale tramite `GardenRepository.watchGarden()`;
+- calcolare numero totale piante;
+- calcolare piante da annaffiare oggi;
+- calcolare prossima cura;
+- gestire loading/empty/error/success.
+
+Stati:
+
+```text
+HomeInitial
+HomeLoading
+HomeEmpty
+HomeSuccess
+HomeFailure
+```
+
+### `HomePage`
+
+La Home non è più solo statica/demo.
+
+Mostra:
+
+- saluto utente;
+- card utente compatta da `ProfileCubit`;
+- numero piante da `GardenCubit`;
+- metriche reali da `HomeCubit`;
+- prossima cura;
+- empty state se il giardino è vuoto;
+- placeholder Smart pot;
+- pull-to-refresh.
+
+La metrica Smart pot è ancora placeholder e vale `0`.
+
+---
+
+## 13. Smart pot
+
+### Modelli
+
+```text
+features/smart_pot/smart_pot_device.dart
+features/smart_pot/smart_pot_telemetry.dart
+features/smart_pot/smart_pot_config.dart
+features/smart_pot/irrigation_calculator.dart
+features/smart_pot/irrigation_recommendation.dart
+```
+
+### Struttura Firestore prevista
+
+```text
+devices/{deviceId}
+  ownerUid
+  linkedUserPlantId
+  telemetry
+  config
+  updatedAt
+
+users/{ownerUid}/garden/{plantId}
+  deviceId
+```
+
+Comandi manuali:
+
+```text
+devices/{deviceId}/commands/{commandId}
+  type: irrigate
+  status: pending
+  requestedBy
+  payload:
+    ml
+    durationMs
+  createdAt
+```
+
+### `SmartPotRepository`
+
+Responsabilità:
+
+- leggere realtime un device;
+- leggere one-shot un device;
+- link/unlink transazionale device-pianta;
+- aggiornare config;
+- creare comando manuale pending;
+- validare device esistente, online, ownership, pompa inattiva, acqua sufficiente e portata pompa valida.
+
+### `SmartPotCubit`
+
+Responsabilità:
+
+- osservare un device;
+- esporre stati loading/loaded/notFound/failure;
+- cancellare subscription al cambio device o close.
+
+### Widget smart pot
+
+```text
+widgets/smart_pot/smart_pot_status_card.dart
+widgets/smart_pot/smart_pot_no_device_card.dart
+widgets/smart_pot/soil_moisture_indicator.dart
+widgets/smart_pot/light_indicator.dart
+widgets/smart_pot/water_tank_estimate_widget.dart
+widgets/smart_pot/irrigation_control_button.dart
+widgets/smart_pot/auto_irrigation_settings_card.dart
+```
+
+### Stato funzionale attuale
+
+Implementato lato app:
+
+- lettura device;
+- visualizzazione stato/telemetria;
+- configurazione automatica;
+- comando manuale pending.
+
+Non implementato:
+
+- firmware consumer;
+- Cloud Function consumer;
+- esecuzione reale comando;
+- algoritmo automatico;
+- meteo come input dell'irrigazione;
+- storico irrigazioni.
+
+---
+
+## 14. Irrigazione manuale e automatica
+
+### Manuale
+
+`IrrigationControlCubit` usa `SmartPotRepository.createManualIrrigationCommand()`.
+
+Prima di scrivere il comando vengono verificati:
+
+- `deviceId` valido;
+- `requestedBy` valido;
+- device esistente;
+- device online;
+- ownership coerente;
+- pompa non attiva;
+- quantità per ciclo configurata;
+- acqua residua sufficiente;
+- `pumpMlPerSecond` valido.
+
+### Automatica
+
+`AutoIrrigationSettingsCubit` e `AutoIrrigationSettingsCard` salvano solo configurazione.
+
+Campi configurabili:
+
+```text
+autoIrrigationEnabled
+soilMoistureThreshold
+maxWaterMlPerCycle
+maxWaterMlPerDay
+```
+
+Regola UI corretta nello stato attuale:
+
+- se `autoIrrigationEnabled == false`: mostra solo header, descrizione, switch e hint;
+- se `autoIrrigationEnabled == true`: mostra valori consigliati, campi numerici e pulsante salva.
+
+Il pulsante “Usa valori consigliati” propone valori prudenti in base al fabbisogno idrico testuale disponibile.
+
+---
+
+## 15. Meteo
+
+### Route e accesso
+
+La pagina meteo è raggiungibile da drawer:
+
+```text
+Drawer -> Meteo -> context.push(Routes.weather)
+```
+
+Route:
+
+```text
+/weather
+```
+
+### `WeatherPage`
+
+Responsabilità:
+
+- leggere profilo da `ProfileCubit`;
+- usare coordinate salvate nel profilo;
+- non usare GPS del device;
+- mostrare card missing-location se città/coordinate sono assenti;
+- supportare pull-to-refresh;
+- mostrare loading/error/success.
+
+### `WeatherCubit`
+
+Stati:
+
+```text
+WeatherInitial
+WeatherLoading
+WeatherNoLocation
+WeatherLoaded
+WeatherFailure
+```
+
+Responsabilità:
+
+- leggere `latitude`, `longitude`, `city`, `countryName` da `PlantlyUser`;
+- bloccare il caricamento se la location è incompleta;
+- chiamare `WeatherRepository`;
+- non calcolare irrigazione.
+
+### `WeatherRepository`
+
+API usata:
+
+```text
+api.open-meteo.com/v1/forecast
+```
+
+Parametri principali:
+
+```text
+current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m
+daily=temperature_2m_min,temperature_2m_max,weather_code,precipitation_probability_max
+timezone=auto
+forecast_days=6
+```
+
+`forecast_days=6` significa:
+
+```text
+indice 0 = oggi
+indici 1-5 = prossimi 5 giorni
+```
+
+### `WeatherData`
+
+Campi principali:
+
+```text
+city
+countryName
+temperatureCelsius
+minTemperatureCelsius
+maxTemperatureCelsius
+condition
+conditionIcon
+humidity
+windSpeedKmh
+precipitationProbability
+forecast
+fetchedAt
+```
+
+### `DailyForecast`
+
+Campi:
+
+```text
+date
+minTemperatureCelsius
+maxTemperatureCelsius
+condition
+conditionIcon
+```
+
+Getter utili:
+
+```text
+dayLabel
+minDisplay
+maxDisplay
+```
+
+### Widget meteo
+
+```text
+widgets/weather/weather_summary_card.dart
+widgets/weather/five_day_forecast_card.dart
+widgets/weather/weather_metric_tile.dart
+widgets/weather/weather_location_missing_card.dart
+widgets/weather/condition_wether_animation.dart
+```
+
+Nota: `condition_wether_animation.dart` contiene un refuso nel nome file (`wether` invece di `weather`). Non blocca il codice se gli import sono coerenti, ma conviene rinominarlo in una futura pulizia.
+
+---
+
+## 16. Notifiche
+
+### Stato attuale
+
+La struttura è predisposta ma no-op.
+
+File:
+
+```text
+repositories/notification_repository.dart
+cubits/notifications/notification_cubit.dart
+cubits/notifications/notification_state.dart
+```
+
+Il repository espone:
+
+```text
+initialize()
+requestPermission()
+scheduleWateringReminder(GardenPlant plant)
+cancelWateringReminder(String plantId)
+rescheduleWateringReminder(GardenPlant plant)
+```
+
+Per ora non usa plugin nativi, Firebase Messaging o Cloud Functions.
+
+Da implementare in futuro:
+
+- reminder irrigazione;
+- umidità troppo bassa;
+- serbatoio acqua basso;
+- smart pot offline;
+- completamento irrigazione.
+
+---
+
+## 17. UI e tema
+
+### Tema
+
+File:
+
+```text
+features/theme/models/theme.dart
+```
+
+Contiene:
+
+- palette colori;
+- gradienti;
+- typography;
+- tema Material.
+
+Nota tecnica: il file tema è grande e centralizza molte responsabilità. Non è un problema bloccante, ma in futuro può essere separato in design tokens, typography e gradients.
+
+### Aggiornamenti UI recenti
+
+- profilo aggiornato con header botanico più curato;
+- Home dashboard reale;
+- drawer utente con avatar, username/email e location;
+- pagina meteo con card principale e forecast 5 giorni;
+- `AutoIrrigationSettingsCard` corretta: campi nascosti quando lo switch è spento;
+- bottom navigation con `StatefulShellRoute`;
+- Smart pot card e indicatori dedicati.
+
+---
+
+## 18. Firestore
+
+### Struttura dati attuale
 
 ```text
 users/{uid}
 usernames/{usernameLowercase}
 users/{uid}/garden/{gardenPlantId}
+devices/{deviceId}
+devices/{deviceId}/commands/{commandId}
 ```
 
-### Regole minime consigliate
+### `users/{uid}`
+
+Campi principali:
+
+```text
+id
+username
+username_lowercase
+name
+surname
+email
+country
+countryCode
+countryName
+city
+latitude
+longitude
+imageUrl
+bio
+createdAt
+updatedAt
+```
+
+### `usernames/{usernameLowercase}`
+
+Campi principali:
+
+```text
+uid
+email
+username
+updatedAt
+```
+
+### `users/{uid}/garden/{gardenPlantId}`
+
+Campi principali:
+
+```text
+id
+userId
+speciesId
+commonName
+scientificName
+nickname
+imageUrl
+watering
+sunlight
+indoor
+poisonousToHumans
+poisonousToPets
+addedAt
+updatedAt
+lastWateredAt
+nextWateringAt
+notes
+notificationEnabled
+deviceId
+targetMoistureMin
+targetMoistureMax
+potSize
+soilType
+drainageLevel
+plantSize
+exposure
+```
+
+### `devices/{deviceId}`
+
+Campi principali:
+
+```text
+ownerUid
+linkedUserPlantId
+telemetry
+config
+updatedAt
+```
+
+### Regole Firestore minime indicative
+
+Queste regole sono solo una base di sviluppo e vanno consolidate prima della pubblicazione:
 
 ```js
 rules_version = '2';
@@ -819,15 +1029,77 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if request.auth != null;
     }
+
+    match /devices/{deviceId} {
+      allow read: if request.auth != null
+                  && resource.data.ownerUid == request.auth.uid;
+
+      allow create: if request.auth != null;
+
+      allow update: if request.auth != null
+                    && resource.data.ownerUid == request.auth.uid;
+
+      match /commands/{commandId} {
+        allow create: if request.auth != null;
+        allow read: if request.auth != null;
+      }
+    }
   }
 }
 ```
 
-Nota sicurezza: le regole su `usernames` sono minime e pragmatiche, ma non rappresentano la soluzione più robusta possibile. Per maggiore sicurezza, la creazione/modifica dell'indice username dovrebbe essere protetta con logica backend o regole più restrittive.
+Nota sicurezza: le regole per `devices` e `commands` sono volutamente indicative. In produzione conviene distinguere chiaramente permessi app, backend e firmware.
 
 ---
 
-## 14. Comandi di sviluppo
+## 19. Configurazioni esterne
+
+### Perenual
+
+File:
+
+```text
+core/perenual_config.dart
+```
+
+L'app legge:
+
+```text
+PERENUAL_API_KEY
+PERENUAL_BASE_URL
+```
+
+Avvio consigliato:
+
+```bash
+flutter run --dart-define=PERENUAL_API_KEY=LA_TUA_KEY
+```
+
+Con base URL custom:
+
+```bash
+flutter run \
+  --dart-define=PERENUAL_API_KEY=LA_TUA_KEY \
+  --dart-define=PERENUAL_BASE_URL=https://perenual.com/api/v2
+```
+
+### Open-Meteo
+
+Usato per:
+
+- geocoding città;
+- meteo corrente;
+- previsione a 5 giorni.
+
+Non richiede API key nella configurazione attuale.
+
+### Rest Countries
+
+Usato per lista paesi.
+
+---
+
+## 20. Comandi di sviluppo
 
 Installazione dipendenze:
 
@@ -847,22 +1119,49 @@ Avvio con Perenual:
 flutter run --dart-define=PERENUAL_API_KEY=LA_TUA_KEY
 ```
 
-Avvio con base URL custom:
+Pulizia build:
 
 ```bash
-flutter run \
-  --dart-define=PERENUAL_API_KEY=LA_TUA_KEY \
-  --dart-define=PERENUAL_BASE_URL=https://perenual.com/api/v2
+flutter clean
+flutter pub get
 ```
 
-Test manuale consigliato per la vertical slice:
+Se è stato cambiato package Android o `MainActivity`, disinstallare le vecchie app dal device/emulatore prima di rilanciare:
+
+```bash
+adb uninstall it.fudeo.my_garden
+adb uninstall com.plantly.app
+flutter run
+```
+
+---
+
+## 21. Test manuale consigliato
+
+### Auth e sessione
 
 ```text
-1. Login
-2. Tab Cerca
-3. Cerca “monstera” o altra pianta
-4. Apri dettaglio
-5. Aggiungi al mio giardino
+1. Avvia app non autenticata
+2. Verifica redirect a SignIn
+3. Registrati con email/password
+4. Verifica redirect automatico alla Home
+5. Logout
+6. Login con email
+7. Logout
+8. Login con username
+9. Login/registrazione Google
+10. Se profilo incompleto, verifica redirect a completamento profilo
+11. Salva paese/città e verifica redirect alla Home
+```
+
+### Search e Garden
+
+```text
+1. Vai in Cerca
+2. Cerca “monstera”
+3. Apri dettaglio
+4. Aggiungi nickname opzionale
+5. Aggiungi al giardino
 6. Verifica documento in users/{uid}/garden
 7. Torna in Garden
 8. Verifica card reale
@@ -870,354 +1169,268 @@ Test manuale consigliato per la vertical slice:
 10. Verifica rimozione da Firestore
 ```
 
----
-
-## 15. Criticità rilevate nel codice attuale
-
-### Criticità alta
-
-1. **API key Perenual presente in commento**
-   - File: `core/perenual_config.dart`
-   - Azione: rimuovere immediatamente dal sorgente.
-
-2. **Possibile refuso sintattico in `PlantSearchPage`**
-   - File: `pages/plant_search_page.dart`
-   - Zona: `_InitialSearchState`
-   - Azione: eseguire `flutter analyze`; se segnala errore, rimuovere la chiusura extra.
-
-3. **Doppio sistema garden legacy/nuovo**
-   - Nuovo: `GardenPlant`, `GardenRepository`, `GardenCubit`, collection `garden`.
-   - Legacy: `UserPlant`, `UserPlantsRepository`, `UserPlantsCubit`, collection `plants`.
-   - Azione: verificare se i file legacy sono ancora referenziati. Se non servono più, rimuoverli in una fase di pulizia.
-
-### Criticità media
-
-4. **Home ancora demo/statica**
-   - File: `pages/home_page.dart`
-   - Azione: collegare a `GardenCubit` o creare `HomeCubit` dopo la vertical slice.
-
-5. **Route plant details duplicata rispetto al flow reale**
-   - File: `core/app_router.dart` e `pages/plant_search_page.dart`
-   - Azione: scegliere se usare sempre route named oppure mantenere il direct push con provider condiviso.
-
-6. **`PlantDetailPage` contiene una riga irraggiungibile**
-   - File: `pages/plant_detail_page.dart`
-   - Azione: rimuovere `return value.trim();` duplicato in `_sunlightLabel`.
-
-7. **File Home vuoti/quasi vuoti**
-   - File: `widgets/home/home_summary_card.dart`, `widgets/home/home_tip_card.dart`
-   - Azione: completarli o rimuoverli.
-
-8. **`SearchComingSoonCard` è legacy**
-   - File: `widgets/search/search_coming_soon_card.dart`
-   - Azione: verificare se è ancora usato; se non è usato, rimuoverlo.
-
-### Criticità bassa
-
-9. **Theme molto grande in un solo file**
-   - File: `features/theme/models/theme.dart`
-   - Azione futura: valutare separazione in design tokens, typography, colors.
-
-10. **Uso di `StatefulWidget` per controller UI**
-   - Non è un problema se non viene usato `setState()` per business logic.
-   - Attualmente non risultano chiamate reali a `setState()`.
-
----
-
-## 16. Roadmap consigliata
-
-### Fase 1 — Stabilizzazione vertical slice
-
-- rimuovere API key commentata;
-- correggere eventuale refuso sintattico in `PlantSearchPage`;
-- pulire riga irraggiungibile in `PlantDetailPage`;
-- verificare `flutter analyze`;
-- verificare flow completo Search -> Detail -> Garden.
-
-### Fase 2 — Home dashboard reale
-
-- collegare Home ai dati di `GardenCubit`;
-- mostrare numero piante reale;
-- mostrare piante senza smart pot;
-- mostrare prossima cura se disponibile;
-- evitare dati mock.
-
-### Fase 3 — Pulizia legacy
-
-- decidere se rimuovere `UserPlant`, `UserPlantsRepository`, `UserPlantsCubit`;
-- rimuovere widget non usati;
-- uniformare naming garden/plants;
-- scegliere una sola strategia di navigazione per `PlantDetailPage`.
-
-### Fase 4 — Smart pot readiness
-
-- creare modello `SmartPotDevice`;
-- creare `SmartPotRepository`;
-- creare `SmartPotCubit`;
-- collegare `smartPotId` alle piante del giardino;
-- abilitare il pulsante irrigazione solo quando il device è collegato e configurato.
-
-### Fase 5 — Irrigazione e notifiche
-
-- creare calcolatore irrigazione centralizzato;
-- programmare reminder irrigazione;
-- gestire notifiche device offline, serbatoio basso, umidità bassa;
-- integrare sensori e comandi reali.
-
----
-
-## 17. Mappa completa dei file analizzati
-
-### Root
+### Home
 
 ```text
-lib/app.dart
-lib/main.dart
-lib/firebase_options.dart
+1. Con giardino vuoto: verifica empty state
+2. Aggiungi una pianta
+3. Verifica totale piante
+4. Verifica prossima cura se nextWateringAt è presente
+5. Pull-to-refresh
 ```
+
+### Meteo
+
+```text
+1. Completa profilo con paese e città
+2. Verifica che latitude/longitude siano salvate
+3. Apri Drawer > Meteo
+4. Verifica meteo corrente
+5. Verifica forecast 5 giorni
+6. Pull-to-refresh
+7. Rimuovi coordinate/profilo incompleto e verifica card missing-location
+```
+
+### Smart pot manuale
+
+```text
+1. Crea un documento devices/{deviceId} valido
+2. Collega deviceId a una pianta in users/{uid}/garden/{plantId}
+3. Verifica card smart pot nella PlantCard
+4. Verifica stato online/offline in base a lastSeenAt
+5. Premi Annaffia ora
+6. Verifica creazione comando pending in devices/{deviceId}/commands
+```
+
+---
+
+## 22. Criticità e cleanup rilevati
+
+### Priorità alta
+
+1. **Verificare `flutter analyze` sul progetto completo**  
+   Lo zip contiene solo `lib/` e README. Alcuni problemi possono emergere solo con `pubspec.yaml`, asset e piattaforme native.
+
+2. **Consolidare Firestore Rules per smart pot**  
+   I path `devices/{deviceId}` e `devices/{deviceId}/commands` richiedono regole più rigorose prima di usare hardware reale.
+
+3. **Completare consumer comandi smart pot**  
+   L'app crea comandi pending, ma nessun backend/firmware li consuma nello zip analizzato.
+
+4. **Pulire definitivamente il flusso legacy `UserPlant`**  
+   Il flusso reale usa `GardenPlant`, ma restano file legacy:
+   ```text
+   features/plant/user_plant.dart
+   repositories/user_plants_repository.dart
+   cubits/user_plants/
+   ```
+
+### Priorità media
+
+5. **Rinominare `condition_wether_animation.dart`**  
+   Refuso nel nome file. Suggerito:
+   ```text
+   condition_weather_animation.dart
+   ```
+   Aggiornare anche gli import.
+
+6. **Aggiornare commenti `UserPlant` nei file smart pot**  
+   Alcuni commenti parlano ancora di `UserPlant`, mentre il modello reale è `GardenPlant`.
+
+7. **Gestire deprecazioni `withOpacity()`**  
+   Sono warning diffusi, non bloccanti. Flutter recente suggerisce alternative basate su `withValues()`.
+
+8. **Valutare performance dei Cubit locali nelle card smart pot**  
+   Per pochi elementi va bene. Con molte piante potrebbe convenire una gestione più centralizzata.
+
+9. **Separare il tema in file più piccoli**  
+   `theme.dart` è molto grande. Si può dividere in palette, typography, gradients e theme factory.
+
+### Priorità bassa
+
+10. **Rimuovere widget legacy non usati**  
+   Esempio: `SearchComingSoonCard`, se non è più referenziato.
+
+11. **Uniformare naming `deviceId` / `smartPotId`**  
+   Il fallback è corretto, ma in futuro conviene migrare i documenti vecchi e usare solo `deviceId`.
+
+12. **Verificare asset Lottie/GIF del meteo**  
+   Lo zip non include gli asset, quindi il caricamento reale va verificato nel progetto completo.
+
+---
+
+## 23. Roadmap consigliata
+
+### Fase 1 — Stabilizzazione immediata
+
+- eseguire `flutter analyze`;
+- correggere warning bloccanti o errori reali;
+- verificare package Android e `MainActivity`;
+- verificare asset meteo registrati nel `pubspec.yaml`;
+- verificare redirect auth dopo email/password e Google;
+- verificare flow meteo con location completa/incompleta.
+
+### Fase 2 — Pulizia tecnica
+
+- rimuovere o archiviare `UserPlant` legacy;
+- rinominare `condition_wether_animation.dart`;
+- aggiornare commenti smart pot;
+- sostituire gradualmente `withOpacity()`;
+- ridurre dimensione del file tema.
+
+### Fase 3 — Smart pot reale
+
+- completare UI collegamento device-pianta;
+- definire security rules definitive;
+- implementare consumer comandi lato firmware/backend;
+- gestire stati comando: pending, running, completed, failed;
+- scrivere storico irrigazioni;
+- aggiornare serbatoio stimato dopo comando completato.
+
+### Fase 4 — Irrigazione automatica
+
+- definire algoritmo operativo iniziale;
+- usare soglie umidità, cooldown, limite giornaliero, serbatoio e sicurezza;
+- aggiungere meteo solo quando il flusso base è stabile;
+- non far generare comandi automatici direttamente alla UI se serve affidabilità: preferire backend/Cloud Function.
+
+### Fase 5 — Notifiche
+
+- integrare plugin nativo o FCM;
+- reminder irrigazione;
+- alert serbatoio basso;
+- alert umidità bassa;
+- alert device offline;
+- notifica completamento irrigazione.
+
+---
+
+## 24. Mappa dei file principali
 
 ### Core
 
 ```text
-lib/core/app_navigator.dart
 lib/core/app_router.dart
 lib/core/app_state_listener.dart
+lib/core/go_router_refresh_stream.dart
 lib/core/parse_from_json.dart
 lib/core/perenual_config.dart
 lib/core/routes.dart
 ```
 
-### Auth Bloc
+### Auth e sessione
 
 ```text
 lib/blocs/auth/auth_bloc.dart
-lib/blocs/auth/auth_bloc_event.dart
-lib/blocs/auth/auth_bloc_state.dart
-```
-
-### Cubits
-
-```text
-lib/cubits/custom/obscure/obscure_cubit.dart
-lib/cubits/forms/google_profile_completion_form_cubit.dart
-lib/cubits/forms/sign_in_form_cubit.dart
-lib/cubits/forms/sign_up_form_cubit.dart
-lib/cubits/garden/garden_cubit.dart
-lib/cubits/garden/garden_state.dart
-lib/cubits/google_profile_completion/google_profile_completion_cubit.dart
-lib/cubits/google_profile_completion/google_profile_completion_state.dart
-lib/cubits/navigation/auth_flow_cubit.dart
-lib/cubits/plant_details/plant_details_cubit.dart
-lib/cubits/plant_details/plant_details_state.dart
-lib/cubits/plant_search/plant_search_cubit.dart
-lib/cubits/plant_search/plant_search_state.dart
-lib/cubits/profile/profile_cubit.dart
-lib/cubits/profile/profile_state.dart
 lib/cubits/session/session_cubit.dart
-lib/cubits/session/session_state.dart
-lib/cubits/shell/shell_cubit.dart
 lib/cubits/sign_in/sign_in_cubit.dart
-lib/cubits/sign_in/sign_in_state.dart
-lib/cubits/sign_out/sign_out_cubit.dart
-lib/cubits/sign_out/sign_out_state.dart
 lib/cubits/sign_up/sign_up_cubit.dart
-lib/cubits/sign_up/sign_up_state.dart
-lib/cubits/user_plants/user_plants_cubit.dart
-lib/cubits/user_plants/user_plants_state.dart
+lib/cubits/sign_out/sign_out_cubit.dart
+lib/cubits/google_profile_completion/google_profile_completion_cubit.dart
+lib/cubits/profile/profile_cubit.dart
 ```
 
-### Features
+### Plants/Garden
 
 ```text
-lib/features/plant/garden_plant.dart
 lib/features/plant/plant_species.dart
-lib/features/plant/user_plant.dart
-lib/features/strenght_enum.dart
-lib/features/theme/models/theme.dart
-lib/features/user/user.dart
-```
-
-### Repositories
-
-```text
-lib/repositories/auth_repository.dart
-lib/repositories/garden_repository.dart
+lib/features/plant/garden_plant.dart
 lib/repositories/plant_repository.dart
-lib/repositories/plant_species_repository.dart
-lib/repositories/user_plants_repository.dart
-lib/repositories/user_repository.dart
+lib/repositories/garden_repository.dart
+lib/cubits/plant_search/plant_search_cubit.dart
+lib/cubits/plant_details/plant_details_cubit.dart
+lib/cubits/garden/garden_cubit.dart
 ```
 
-### Pages
+### Home
 
 ```text
-lib/pages/auth/sign_in_page.dart
-lib/pages/auth/sign_up_page.dart
-lib/pages/garden_page.dart
-lib/pages/google_profile_completion_page.dart
+lib/cubits/home/home_cubit.dart
 lib/pages/home_page.dart
-lib/pages/initial/splash_screen.dart
-lib/pages/main_shell_page.dart
-lib/pages/plant_detail_page.dart
-lib/pages/plant_search_page.dart
-lib/pages/profile_page.dart
-```
-
-### Widgets Auth
-
-```text
-lib/widgets/auth/auth_card.dart
-lib/widgets/auth/auth_header.dart
-lib/widgets/auth/google_auth_button.dart
-```
-
-### Widgets Bottom App Bar
-
-```text
-lib/widgets/bottom_appbar/navigation_item.dart
-lib/widgets/bottom_appbar/plantly_bottom_navigation.dart
-```
-
-### Widgets Feedback
-
-```text
-lib/widgets/feedback/snackbar_helper.dart
-```
-
-### Widgets Garden
-
-```text
-lib/widgets/garden/garden_empty_state.dart
-lib/widgets/garden/garden_header_widget.dart
-lib/widgets/garden/garden_orb_preview.dart
-lib/widgets/garden/garden_stats_banner.dart
-lib/widgets/garden/meter_row.dart
-lib/widgets/garden/plant_card.dart
-```
-
-### Widgets Home
-
-```text
 lib/widgets/home/home_greeting_widget.dart
-lib/widgets/home/home_hero_card.dart
 lib/widgets/home/home_metric_grid.dart
-lib/widgets/home/home_quick_actions.dart
 lib/widgets/home/home_reminder_card.dart
-lib/widgets/home/home_summary_card.dart
-lib/widgets/home/home_tip_card.dart
+lib/widgets/home/home_user_card.dart
 ```
 
-### Widgets Profile
+### Smart pot
 
 ```text
-lib/widgets/profile/info_card.dart
-lib/widgets/profile/info_user_model.dart
-lib/widgets/profile/logout_button.dart
-lib/widgets/profile/profile_action_tile.dart
-lib/widgets/profile/profile_header_widget.dart
-lib/widgets/profile/profile_info_card.dart
-lib/widgets/profile/profile_stats_row.dart
-lib/widgets/profile/section_label.dart
-lib/widgets/profile/stat_card.dart
+lib/features/smart_pot/smart_pot_device.dart
+lib/features/smart_pot/smart_pot_telemetry.dart
+lib/features/smart_pot/smart_pot_config.dart
+lib/repositories/smart_pot_repository.dart
+lib/cubits/smart_pot/smart_pot_cubit.dart
+lib/cubits/irrigation_control/irrigation_control_cubit.dart
+lib/cubits/auto_irrigation_settings/auto_irrigation_settings_cubit.dart
+lib/widgets/smart_pot/
 ```
 
-### Widgets Search
+### Location/Meteo
 
 ```text
-lib/widgets/search/plant_info_badge.dart
-lib/widgets/search/plant_species_card.dart
-lib/widgets/search/plant_species_grid.dart
-lib/widgets/search/search_bar_widget.dart
-lib/widgets/search/search_category_chips.dart
-lib/widgets/search/search_coming_soon_card.dart
+lib/features/location/country_option.dart
+lib/features/location/city_option.dart
+lib/repositories/location_repository.dart
+lib/widgets/location/country_picker_field.dart
+lib/widgets/location/city_picker_field.dart
+lib/features/weather/weather_data.dart
+lib/repositories/weather_repository.dart
+lib/cubits/weather/weather_cubit.dart
+lib/pages/weather_page.dart
+lib/widgets/weather/
 ```
 
-### Widgets Sign-up
+### Navigazione/UI
 
 ```text
-lib/widgets/sign_up/password_strength.dart
+lib/pages/main_shell_page.dart
+lib/widgets/navigation/app_drawer.dart
+lib/widgets/bottom_appbar/plantly_bottom_navigation.dart
 ```
 
 ---
 
-## 18. Stato finale aggiornato
+## 25. Stato finale sintetico
 
 ### Solido
 
 - auth email/password;
-- login username;
+- login con username;
 - Google Sign-In;
 - completamento profilo Google;
 - profilo Firestore realtime;
-- routing root separato;
-- shell senza `setState()`;
-- search reale via Perenual;
-- dettaglio pianta reale;
-- garden reale su Firestore;
-- rimozione pianta funzionante;
-- irrigazione bloccata finché non sarà supportata dal vaso intelligente;
+- routing `go_router`;
+- shell con tab persistenti;
+- Home collegata al giardino reale;
+- search Perenual;
+- dettaglio pianta;
+- garden Firestore realtime;
+- rimozione pianta;
+- drawer con meteo;
+- pagina meteo con Open-Meteo;
+- forecast 5 giorni;
+- predisposizione smart pot ben separata;
+- comando manuale pending;
+- configurazione automatica salvata senza generare comandi;
 - feedback centralizzato con `SnackBarHelper`.
 
-### Da completare prima della pubblicazione
+### Da completare prima di considerare la feature smart pot realmente pronta
 
-- correggere criticità di codice rilevate da `flutter analyze`;
-- rimuovere API key commentata;
-- collegare Home a dati reali;
-- pulire legacy plants/garden;
-- consolidare Firestore rules;
-- testare su Android/Web/iOS;
-- implementare gestione smart pot e notifiche solo in fasi successive.
+- regole Firestore definitive;
+- linking device-pianta da UI;
+- backend/firmware consumer comandi;
+- stati comando;
+- gestione serbatoio dopo irrigazione;
+- algoritmo automatico;
+- notifiche reali;
+- test su device fisico.
 
+### Da completare prima di una release pulita
 
-
----
-
-## 15. Review tecnica post Smart Pot / Location / Weather prep
-
-Questa sezione fotografa lo stato dopo le patch relative a smart pot, irrigazione manuale, configurazione automatica, location utente e predisposizione meteo.
-
-### Stato generale
-
-La base è compilabile a livello architetturale e le nuove feature principali sono separate correttamente:
-
-- telemetria smart pot in `SmartPotCubit` + `SmartPotRepository`;
-- comando manuale "Annaffia ora" in `IrrigationControlCubit`;
-- configurazione irrigazione automatica in `AutoIrrigationSettingsCubit`;
-- location utente in `PlantlyUser`, non più nella singola pianta;
-- country/city picker basati su API esterne;
-- `WeatherService` predisposto ma senza chiamate meteo reali.
-
-### Correzioni applicate nella patch di stabilizzazione
-
-- `SmartPotRepository` ora aggiorna la pianta nel path reale del giardino:
-  `users/{uid}/garden/{plantId}`.
-- I commenti tecnici di `SmartPotDevice` sono stati riallineati al modello reale `GardenPlant`.
-- `createManualIrrigationCommand()` verifica anche l'ownership del device quando `ownerUid` è presente.
-- `AppStateListener` reagisce anche al cambio UID, non solo al cambio di status auth.
-- `CountryPickerField` evita di passare un valore iniziale quando la lista paesi non è ancora caricata.
-- Rimossi import duplicati e import inutilizzati minori.
-- Rimossa la classe privata non usata `_TotalPlantsBadge`.
-- Aggiunta `assets/images/.gitkeep` perché il path è dichiarato in `pubspec.yaml`.
-
-### Punti deboli ancora presenti
-
-- Restano molte deprecazioni `withOpacity()` e alcuni suggerimenti `prefer_const_constructors`. Non sono bloccanti e vanno gestiti in una futura patch grafica/cleanup.
-- `UserPlant`, `UserPlantsRepository` e `UserPlantsCubit` risultano ancora presenti come flusso legacy. Il flusso reale del giardino usa invece `GardenPlant` + `GardenRepository`.
-- La sezione smart pot nella `PlantCard` crea Cubit locali per ogni card. Va bene per il prototipo, ma in futuro conviene valutare performance se il giardino contiene molte piante.
-- Il comando manuale crea un documento pending in `devices/{deviceId}/commands`; manca ancora il backend/firmware consumer.
-- La modalità automatica salva solo configurazione. Non genera ancora comandi automatici.
-- `WeatherService` è solo un contratto. Non esiste ancora una pagina meteo reale né una `WeatherRepository`.
-
-### Prossimo passo consigliato
-
-Prima di implementare il calcolo avanzato dell'irrigazione, si può aggiungere una sezione meteo molto semplice accessibile da drawer:
-
-```text
-Drawer
-  - avatar / immagine utente
-  - username / email
-  - città e paese
-  - voce "Meteo"
-```
-
-La pagina meteo deve limitarsi a leggere la location dal profilo utente e mostrare dati base. Non deve ancora influenzare l'irrigazione.
+- `flutter analyze` pulito;
+- pulizia legacy `UserPlant`;
+- verifica asset e `pubspec.yaml`;
+- verifica package Android/iOS;
+- cleanup deprecazioni;
+- test manuale dei principali flow.

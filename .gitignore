@@ -63,3 +63,6 @@ pubspec.lock
 
 # Firebase
 firebase_options.dart
+
+firebase-keys/
+*.service-account.json
